@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8B3051D9-E533-4C04-9B68-F4E7371B795F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1FD5ED45-3EE2-4938-B572-039EBD7C216D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{B0E29410-BA54-4D52-B53E-E6829B418EA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bufdio", "src\Bufdio\Bufdio.csproj", "{159C3715-2051-4321-A821-C05B18B7DDAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bufdio.UnitTests", "tests\Bufdio.UnitTests\Bufdio.UnitTests.csproj", "{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bufdio.ConsoleTests", "tests\Bufdio.ConsoleTests\Bufdio.ConsoleTests.csproj", "{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BufdioAvalonia", "examples\BufdioAvalonia\BufdioAvalonia.csproj", "{BDA98407-9893-40D8-9530-174478B99BC1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{159C3715-2051-4321-A821-C05B18B7DDAF} = {8B3051D9-E533-4C04-9B68-F4E7371B795F}
+		{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7} = {1FD5ED45-3EE2-4938-B572-039EBD7C216D}
+		{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D} = {1FD5ED45-3EE2-4938-B572-039EBD7C216D}
+		{BDA98407-9893-40D8-9530-174478B99BC1} = {B0E29410-BA54-4D52-B53E-E6829B418EA0}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{159C3715-2051-4321-A821-C05B18B7DDAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{159C3715-2051-4321-A821-C05B18B7DDAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{159C3715-2051-4321-A821-C05B18B7DDAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{159C3715-2051-4321-A821-C05B18B7DDAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{297FF8F9-E646-4CDC-B164-8CE7D97DDCE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A4F836-05DD-4CAD-9ACB-D80FF2A4528D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDA98407-9893-40D8-9530-174478B99BC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDA98407-9893-40D8-9530-174478B99BC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDA98407-9893-40D8-9530-174478B99BC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDA98407-9893-40D8-9530-174478B99BC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+EndGlobal

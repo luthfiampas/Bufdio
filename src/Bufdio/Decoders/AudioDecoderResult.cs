@@ -1,0 +1,44 @@
+﻿namespace Bufdio.Decoders
+{
+    /// <summary>
+    /// Represents result structure returned by audio decoder while reading audio frame.
+    /// </summary>
+    public readonly struct AudioDecoderResult
+    {
+        /// <summary>
+        /// Instantiate a new <see cref="AudioDecoderResult"/> structure.
+        /// </summary>
+        /// <param name="frame">Decoded audio frame if successfully reads.</param>
+        /// <param name="isSucceeded">Whether or not the frame is successfully reads.</param>
+        /// <param name="isEndOfFile">Whether or not the decoder reaches end-of-file.</param>
+        /// <param name="errorMessage">An error message while reading audio frame.</param>
+        public AudioDecoderResult(AudioFrame frame, bool isSucceeded, bool isEndOfFile, string errorMessage = default)
+        {
+            Frame = frame;
+            IsSucceeded = isSucceeded;
+            IsEOF = isEndOfFile;
+            ErrorMessage = errorMessage;
+        }
+
+        /// <summary>
+        /// Gets decoded audio frame if successfully reads.
+        /// This should returns <c>null</c> if <see cref="IsSucceeded"/> is <c>false</c>.
+        /// </summary>
+        public AudioFrame Frame { get; }
+        
+        /// <summary>
+        /// Gets whether or not the decoder is succesfully reading audio frame.
+        /// </summary>
+        public bool IsSucceeded { get; }
+        
+        /// <summary>
+        /// Gets whether or not the decoder reaches end-of-file (cannot be continued) while reading audio frame. 
+        /// </summary>
+        public bool IsEOF { get; }
+        
+        /// <summary>
+        /// Gets error message from the decoder while reading audio frame.
+        /// </summary>
+        public string ErrorMessage { get; }
+    }
+}

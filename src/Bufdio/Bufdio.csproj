@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyVersion>0.0</AssemblyVersion>
+    <Authors>Luthfi Tri Atmaja</Authors>
+    <Copyright>Copyright 2021 Luthfi Tri Atmaja</Copyright>
+    <Description>A cross platform audio playback library for .NET with PortAudio and FFmpeg.</Description>
+    <FileVersion>0.0.1</FileVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Bufdio</PackageId>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/luthfiampas/Bufdio</PackageProjectUrl>
+    <PackageTags>audio,playback,player,ffmpeg,portaudio,sound,cross-platform</PackageTags>
+    <Product>Bufdio</Product>
+    <RepositoryUrl>https://github.com/luthfiampas/Bufdio</RepositoryUrl>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Version>0.0.1-beta</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FFmpeg.AutoGen" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../LICENSE" Pack="true" Visible="false" PackagePath="" />
+    <Compile Remove="nupkg\**" />
+    <EmbeddedResource Remove="nupkg\**" />
+    <None Remove="nupkg\**" />
+  </ItemGroup>
+
+</Project>
