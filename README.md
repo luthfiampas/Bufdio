@@ -34,7 +34,7 @@ Console.WriteLine(defaultDevice.DefaultHighOutputLatency);
 // Retrieve all available output devices
 foreach (var device in BufdioLib.OutputDevices)
 {
-	Console.WriteLine(device.Name);
+    Console.WriteLine(device.Name);
 }
 ```
 
@@ -91,15 +91,15 @@ using IAudioEngine engine = new PortAudioEngine();
 
 for (var i = 0; i < samples.Length; i++)
 {
-	samples[i] = (float)(Amplitude * Math.Sin(2 * Math.PI * i * Frequency / SampleRate));
+    samples[i] = (float)(Amplitude * Math.Sin(2 * Math.PI * i * Frequency / SampleRate));
 }
 
 Console.WriteLine("Playing 10 times with 1 second delay..");
 
 for (var i = 0; i < 10; i++)
 {
-	engine.Send(samples);
-	Thread.Sleep(1000);
+    engine.Send(samples);
+    Thread.Sleep(1000);
 }
 ```
 
