@@ -8,83 +8,83 @@
         Width="500" Height="250"
         Title="{Binding Title}">
 
-	<Window.Resources>
-		<converters:TimeSpanFormatConverter x:Key="TimeSpanFormatConverter" />
-		<converters:TimeSpanMsConverter x:Key="TimeSpanMsConverter" />
-		<converters:LogColorConverter x:Key="LogColorConverter" />
-	</Window.Resources>
+    <Window.Resources>
+        <converters:TimeSpanFormatConverter x:Key="TimeSpanFormatConverter" />
+        <converters:TimeSpanMsConverter x:Key="TimeSpanMsConverter" />
+        <converters:LogColorConverter x:Key="LogColorConverter" />
+    </Window.Resources>
 
-	<Window.DataContext>
-		<vm:MainWindowViewModel />
-	</Window.DataContext>
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
 
-	<Grid RowDefinitions="Auto,*,Auto,Auto">
-		<Grid ColumnDefinitions="*,Auto" Margin="5">
-			<StackPanel Orientation="Horizontal">
-				<Button Content="From File" Margin="0,0,1,0" Command="{Binding OpenFileCommand}" />
-				<Button Content="From URL" Command="{Binding OpenUrlCommand}" />
-			</StackPanel>
-			<StackPanel Grid.Column="1" Orientation="Horizontal">
-				<Button Content="Initialize FFmpeg" Margin="0,0,1,0" Command="{Binding InitFFmpegCommand}" />
-				<Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" />
-			</StackPanel>
-		</Grid>
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto" Margin="5">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="From File" Margin="0,0,1,0" Command="{Binding OpenFileCommand}" />
+                <Button Content="From URL" Command="{Binding OpenUrlCommand}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="Initialize FFmpeg" Margin="0,0,1,0" Command="{Binding InitFFmpegCommand}" />
+                <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" />
+            </StackPanel>
+        </Grid>
 
-		<Border Grid.Row="1" Background="#000000">
-			<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-				<ItemsControl Items="{Binding Logs}">
-					<ItemsControl.ItemTemplate>
-						<DataTemplate>
-							<TextBlock Margin="5"
-							           Text="{Binding}"
-							           Foreground="{Binding Path=., Converter={StaticResource LogColorConverter}}" />
-						</DataTemplate>
-					</ItemsControl.ItemTemplate>
-				</ItemsControl>
-			</ScrollViewer>
-		</Border>
+        <Border Grid.Row="1" Background="#000000">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <ItemsControl Items="{Binding Logs}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5"
+                                       Text="{Binding}"
+                                       Foreground="{Binding Path=., Converter={StaticResource LogColorConverter}}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
 
-		<Border Grid.Row="2" BorderBrush="#cccccc" BorderThickness="0,0,0,1">
-			<Grid ColumnDefinitions="Auto,*,Auto" Margin="5">
-				<TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanFormatConverter}}" />
-				<ProgressBar Grid.Column="1"
-				             Name="ProgressBar"
-				             Margin="10,0"
-				             Minimum="0"
-				             Maximum="{Binding Duration, Converter={StaticResource TimeSpanMsConverter}}"
-				             Value="{Binding Position, Converter={StaticResource TimeSpanMsConverter}}" />
-				<TextBlock Grid.Column="2"
-				           Text="{Binding Position, Converter={StaticResource TimeSpanFormatConverter}}" />
-			</Grid>
-		</Border>
+        <Border Grid.Row="2" BorderBrush="#cccccc" BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="5">
+                <TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanFormatConverter}}" />
+                <ProgressBar Grid.Column="1"
+                             Name="ProgressBar"
+                             Margin="10,0"
+                             Minimum="0"
+                             Maximum="{Binding Duration, Converter={StaticResource TimeSpanMsConverter}}"
+                             Value="{Binding Position, Converter={StaticResource TimeSpanMsConverter}}" />
+                <TextBlock Grid.Column="2"
+                           Text="{Binding Position, Converter={StaticResource TimeSpanFormatConverter}}" />
+            </Grid>
+        </Border>
 
-		<Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="5">
-			<StackPanel Orientation="Horizontal">
-				<Button VerticalAlignment="Center"
-				        Content="{Binding PlayPauseText}"
-				        Command="{Binding PlayPauseCommand}"
-				        Margin="0,0,1,0" />
-				<Button VerticalAlignment="Center"
-				        Command="{Binding StopCommand}"
-				        Content="Stop"
-				        Margin="0,0,50,0" />
-				<ToggleButton VerticalAlignment="Center"
-				              IsChecked="{Binding IsRepeatEnabled, Mode=TwoWay}"
-				              Content="Repeat"
-				              Margin="0,0,1,0" />
-				<ToggleButton VerticalAlignment="Center"
-				              IsChecked="{Binding IsEchoEnabled, Mode=TwoWay}"
-				              Content="Echo Effect" />
-			</StackPanel>
-			<StackPanel Grid.Column="1" Orientation="Horizontal">
-				<TextBlock VerticalAlignment="Center" Text="Volume " />
-				<Slider Orientation="Horizontal"
-				        VerticalAlignment="Center"
-				        Value="{Binding Volume, Mode=TwoWay}"
-				        Minimum="0"
-				        Maximum="100"
-				        Width="150" />
-			</StackPanel>
-		</Grid>
-	</Grid>
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="5">
+            <StackPanel Orientation="Horizontal">
+                <Button VerticalAlignment="Center"
+                        Content="{Binding PlayPauseText}"
+                        Command="{Binding PlayPauseCommand}"
+                        Margin="0,0,1,0" />
+                <Button VerticalAlignment="Center"
+                        Command="{Binding StopCommand}"
+                        Content="Stop"
+                        Margin="0,0,50,0" />
+                <ToggleButton VerticalAlignment="Center"
+                              IsChecked="{Binding IsRepeatEnabled, Mode=TwoWay}"
+                              Content="Repeat"
+                              Margin="0,0,1,0" />
+                <ToggleButton VerticalAlignment="Center"
+                              IsChecked="{Binding IsEchoEnabled, Mode=TwoWay}"
+                              Content="Echo Effect" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="Volume " />
+                <Slider Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Value="{Binding Volume, Mode=TwoWay}"
+                        Minimum="0"
+                        Maximum="100"
+                        Width="150" />
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Window>

@@ -6,13 +6,13 @@
         ShowInTaskbar="False"
         SizeToContent="Height"
         Width="350" Height="200">
-	<StackPanel Margin="10">
-		<StackPanel Margin="0,0,0,10">
-			<TextBox Name="InputTextBox" Margin="0,0,0,4" />
-			<TextBlock Name="DescriptionTextBlock" />
-		</StackPanel>
-		<StackPanel Orientation="Horizontal">
-			<Button Name="OkButton" Content="Apply" Margin="0,0,1,0" />
-		</StackPanel>
-	</StackPanel>
+    <StackPanel Margin="10">
+        <StackPanel Margin="0,0,0,10">
+            <TextBox Name="InputTextBox" Margin="0,0,0,4" />
+            <TextBlock Name="DescriptionTextBlock" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <Button Name="OkButton" Content="Apply" Margin="0,0,1,0" />
+        </StackPanel>
+    </StackPanel>
 </Window>

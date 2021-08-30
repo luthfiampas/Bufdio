@@ -14,11 +14,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Bufdio\Bufdio.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <AvaloniaResource Include="**/*.xaml" />
   </ItemGroup>
-  
+
   <ItemGroup Condition=" '$(Configuration)|$(RuntimeIdentifier)' == 'Release|win-x64' ">
     <None Include="../../libs/PortAudio/win-x64/portaudio.dll" Link="libs/portaudio.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -34,5 +34,5 @@
   <ItemGroup Condition=" '$(Configuration)|$(RuntimeIdentifier)' == 'Release|osx-x64' ">
     <None Include="../../libs/PortAudio/osx-x64/libportaudio.dylib" Link="libs/libportaudio.dylib" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  
+
 </Project>
