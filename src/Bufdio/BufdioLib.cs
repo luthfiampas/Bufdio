@@ -78,7 +78,7 @@ namespace Bufdio
                 return;
             }
 
-            ffmpeg.RootPath = ffmpegDirectory;
+            ffmpeg.RootPath = ffmpegDirectory ?? "";
             ffmpeg.av_log_set_level(ffmpeg.AV_LOG_QUIET);
             IsFFmpegInitialized = true;
         }
