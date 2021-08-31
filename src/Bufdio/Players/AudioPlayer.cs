@@ -400,7 +400,7 @@ namespace Bufdio.Players
                     Thread.Sleep(10);
                 }
                 
-                RunSampleProcessors(result.Frame);
+                RunCustomSampleProcessors(result.Frame);
                 OnFrameDecoded(result.Frame);
                 
                 _queue.Enqueue(result.Frame);
@@ -449,8 +449,15 @@ namespace Bufdio.Players
                     CurrentState = AudioPlayerState.Playing;
                     OnStateChanged();
                 }
-                
-                _engine.Send(MemoryMarshal.Cast<byte, float>(frame.Data));
+
+                var samples = MemoryMarshal.Cast<byte, float>(frame.Data);
+
+                for (var i = 0; i < samples.Length; i++)
+                {
+                    samples[i] = _volumeProcessor.Procees(samples[i]);
+                }
+
+                _engine.Send(samples);
                 OnFramePresented(frame);
                 
                 CurrentPosition = frame.PresentationTime.Milliseconds();
@@ -482,29 +489,26 @@ namespace Bufdio.Players
             OnLogCreated(AudioPlayerLog.Info("Audio engine thread is completed."));
         }
         
-        private void RunSampleProcessors(AudioFrame frame)
+        private void RunCustomSampleProcessors(AudioFrame frame)
         {
-            var samples = MemoryMarshal.Cast<byte, float>(frame.Data);
-            
-            if (_customProcessors != null)
+            if (_customProcessors == null)
             {
-                foreach (var processor in _customProcessors)
-                {
-                    if (!processor.IsEnabled)
-                    {
-                        continue;
-                    }
-                    
-                    for (var i = 0; i < samples.Length; i++)
-                    {
-                        samples[i] = processor.Procees(samples[i]);
-                    }
-                }
+                return;
             }
-            
-            for (var i = 0; i < samples.Length; i++)
+
+            var samples = MemoryMarshal.Cast<byte, float>(frame.Data);
+
+            foreach (var processor in _customProcessors)
             {
-                samples[i] = _volumeProcessor.Procees(samples[i]);
+                if (!processor.IsEnabled)
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < samples.Length; i++)
+                {
+                    samples[i] = processor.Procees(samples[i]);
+                }
             }
         }
 
