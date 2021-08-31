@@ -13,7 +13,7 @@ namespace Bufdio.Utilities.Extensions
         
         public static int PaGuard(this int code)
         {
-            if (!code.FFIsError())
+            if (!code.PaIsError())
             {
                 return code;
             }
