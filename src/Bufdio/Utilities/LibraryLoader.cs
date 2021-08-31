@@ -40,7 +40,7 @@ namespace Bufdio.Utilities
         
         public void Dispose()
         {
-            if (_disposed || _handle == IntPtr.Zero)
+            if (_disposed)
             {
                 return;
             }
