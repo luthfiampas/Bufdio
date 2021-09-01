@@ -1,5 +1,4 @@
 ﻿using System;
-using Bufdio.Utilities;
 using Bufdio.Utilities.Extensions;
 
 namespace Bufdio.Exceptions

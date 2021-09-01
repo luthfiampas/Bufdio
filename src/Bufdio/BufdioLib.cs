@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Bufdio.Bindings.PortAudio;
 using Bufdio.Exceptions;
 using Bufdio.Utilities;

@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 using Bufdio.Bindings.PortAudio;
 using Bufdio.Exceptions;
-using Bufdio.Utilities;
 using Bufdio.Utilities.Extensions;
 
 namespace Bufdio.Engines
