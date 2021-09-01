@@ -9,14 +9,14 @@
         /// Instantiate a new <see cref="AudioDecoderResult"/> structure.
         /// </summary>
         /// <param name="frame">Decoded audio frame if successfully reads.</param>
-        /// <param name="isSucceeded">Whether or not the frame is successfully reads.</param>
-        /// <param name="isEndOfFile">Whether or not the decoder reaches end-of-file.</param>
+        /// <param name="succeeded">Whether or not the frame is successfully reads.</param>
+        /// <param name="eof">Whether or not the decoder reaches end-of-file.</param>
         /// <param name="errorMessage">An error message while reading audio frame.</param>
-        public AudioDecoderResult(AudioFrame frame, bool isSucceeded, bool isEndOfFile, string errorMessage = default)
+        public AudioDecoderResult(AudioFrame frame, bool succeeded, bool eof, string errorMessage = default)
         {
             Frame = frame;
-            IsSucceeded = isSucceeded;
-            IsEOF = isEndOfFile;
+            IsSucceeded = succeeded;
+            IsEOF = eof;
             ErrorMessage = errorMessage;
         }
 
