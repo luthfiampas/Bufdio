@@ -50,6 +50,7 @@ player.Load(fileStream);
 player.Play();
 player.Pause();
 player.Stop();
+player.SetVolume(0.9f);
 player.Seek(TimeSpan.FromSeconds(2));
 
 // Properties (read-only)
