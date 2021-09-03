@@ -16,12 +16,12 @@
         
         /// <summary>
         /// Gets or sets whether or not the sample processor is currently enabled.
-        /// Intended for external use and does not affects <see cref="Procees"/> method.
+        /// Intended for external use and does not affects <see cref="Process"/> method.
         /// Defaults to <c>true</c>.
         /// </summary>
         public bool IsEnabled { get; set; }
 
         /// <inheritdoc />
-        public abstract float Procees(float sample);
+        public abstract float Process(float sample);
     }
 }

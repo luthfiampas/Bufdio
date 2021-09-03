@@ -8,7 +8,7 @@
     {
         /// <summary>
         /// Gets or sets whether or not the sample processor is currently enabled.
-        /// Intended for external use should not affects <see cref="Procees"/> method.
+        /// Intended for external use should not affects <see cref="Process"/> method.
         /// </summary>
         bool IsEnabled { get; set; }
         
@@ -17,6 +17,6 @@
         /// </summary>
         /// <param name="sample">Audio sample to be processed.</param>
         /// <returns>Processed sample in <c>Float32</c> format.</returns>
-        float Procees(float sample);
+        float Process(float sample);
     }
 }

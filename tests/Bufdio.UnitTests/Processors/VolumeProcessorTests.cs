@@ -15,7 +15,7 @@ namespace Bufdio.UnitTests.Processors
 
             foreach (var sample in samples)
             {
-                Assert.Equal(volume * sample, processor.Procees(sample));
+                Assert.Equal(volume * sample, processor.Process(sample));
             }
         }
     }

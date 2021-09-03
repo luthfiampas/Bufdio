@@ -22,7 +22,7 @@
         public float Volume { get; set; }
 
         /// <inheritdoc />
-        public override float Procees(float sample)
+        public override float Process(float sample)
         {
             return sample * Volume;
         }

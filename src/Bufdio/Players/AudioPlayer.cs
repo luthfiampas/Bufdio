@@ -454,7 +454,7 @@ namespace Bufdio.Players
 
                 for (var i = 0; i < samples.Length; i++)
                 {
-                    samples[i] = _volumeProcessor.Procees(samples[i]);
+                    samples[i] = _volumeProcessor.Process(samples[i]);
                 }
 
                 _engine.Send(samples);
@@ -507,7 +507,7 @@ namespace Bufdio.Players
 
                 for (var i = 0; i < samples.Length; i++)
                 {
-                    samples[i] = processor.Procees(samples[i]);
+                    samples[i] = processor.Process(samples[i]);
                 }
             }
         }
