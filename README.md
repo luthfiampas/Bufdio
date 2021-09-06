@@ -1,7 +1,7 @@
 # Bufdio
-A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio especially in desktop environment.
-
 [![NuGet](https://img.shields.io/nuget/v/Bufdio)](https://www.nuget.org/packages/Bufdio/)
+
+A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio especially in desktop environment.
 
 This video demonstrate how to integrate Bufdio and [NWaves](https://github.com/ar1st0crat/NWaves/) to create realtime echo effect during playback (source code can be found at [examples directory](https://github.com/luthfiampas/Bufdio/tree/main/examples/BufdioAvalonia)).
 
@@ -73,7 +73,7 @@ player.FramePresented += OnFramePresented;
 The `AudioPlayer` constructor allows you to specify list of custom sample processors. `ISampleProcessor` interface is intended to modify audio sample that will be executed before writing audio frame to output device. The most simple processor is `VolumeProcessor` that simply multiply given sample by desired volume.
 
 ```csharp
-var processors = new[] { new EchoProcessor(), new DistortionProcessor() };
+var processors = new ISampleProcessor[] { new EchoProcessor(), new DistortionProcessor() };
 using IAudioPlayer player = new AudioPlayer(customProcessors: processors);
 ```
 
@@ -88,7 +88,7 @@ const float Amplitude = 0.35f * short.MaxValue;
 var samples = new float[SampleRate];
 var options = new AudioEngineOptions(1, SampleRate);
 
-using IAudioEngine engine = new PortAudioEngine();
+using IAudioEngine engine = new PortAudioEngine(options);
 
 for (var i = 0; i < samples.Length; i++)
 {
