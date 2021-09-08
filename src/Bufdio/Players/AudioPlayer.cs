@@ -238,13 +238,14 @@ namespace Bufdio.Players
         protected virtual bool OnDecoderFailed(AudioDecoderResult result)
         {
             _queue.Clear();
-                    
-            var message = $"Failed to decode frame: {result.ErrorMessage}. Retrying..";
-            OnLogCreated(AudioPlayerLog.Error(message));
+
+            OnLogCreated(AudioPlayerLog.Error($"Failed to decode frame: {result.ErrorMessage}. Retrying.."));
             
             _currentDecoder.Dispose();
             _currentDecoder = null;
-            
+
+            IsAudioLoaded = false;
+
             while (_currentDecoder == null)
             {
                 if (CurrentState == AudioPlayerState.Stopped)
@@ -252,7 +253,18 @@ namespace Bufdio.Players
                     return false;
                 }
 
-                _currentDecoder = CurrentUrl != null ? CreateDecoder(CurrentUrl) : CreateDecoder(CurrentStream);
+                try
+                {
+                    _currentDecoder = CurrentUrl != null ? CreateDecoder(CurrentUrl) : CreateDecoder(CurrentStream);
+
+                    IsAudioLoaded = true;
+                    OnAudioLoaded();
+                }
+                catch (FFmpegException)
+                {
+                    _currentDecoder = null;
+                    Thread.Sleep(10);
+                }
             }
             
             Seek(CurrentPosition);
