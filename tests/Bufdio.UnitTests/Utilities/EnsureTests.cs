@@ -17,7 +17,7 @@ namespace Bufdio.UnitTests.Utilities
         }
         
         [Fact]
-        public void ArgumentNotNull_Works_Properly()
+        public void NotNull_Works_Properly()
         {
             // Should not throws
             Ensure.NotNull("abc", "param");
@@ -31,7 +31,7 @@ namespace Bufdio.UnitTests.Utilities
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void ArgumentNotNull_Use_Default_ParamName(string paramName)
+        public void NotNull_Use_Default_ParamName(string paramName)
         {
             var ex = Assert.Throws<ArgumentNullException>(() => Ensure.NotNull(null, paramName));
             Assert.Equal("argument", ex.ParamName);
