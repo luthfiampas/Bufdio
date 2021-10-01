@@ -36,6 +36,8 @@ namespace Bufdio.Decoders.FFmpeg
 
             _formatCtx = ffmpeg.avformat_alloc_context();
 
+            options = options ?? new FFmpegDecoderOptions();
+
             if (!useUrl)
             {
                 _reads = ReadsImpl;
@@ -52,8 +54,21 @@ namespace Bufdio.Decoders.FFmpeg
                 _formatCtx->pb = avio;
             }
 
+            AVDictionary* avformatOptions = null;
+            if (options.DemuxerOptions != null)
+            {
+                foreach (var option in options.DemuxerOptions)
+                {
+                    ffmpeg.av_dict_set(&avformatOptions, option.Key, option.Value, 0);
+                }
+            }
+
             var formatCtx = _formatCtx;
-            ffmpeg.avformat_open_input(&formatCtx, useUrl ? url : null, null, null).FFGuard();
+            ffmpeg.avformat_open_input(&formatCtx, useUrl ? url : null, null, &avformatOptions).FFGuard();
+
+            // avformat_open_input can return a new AVDictionary with any options that weren't recognized. Clean it up.
+            ffmpeg.av_dict_free(&avformatOptions);
+
             ffmpeg.avformat_find_stream_info(_formatCtx, null).FFGuard();
 
             AVCodec* codec = null;
@@ -73,7 +88,6 @@ namespace Bufdio.Decoders.FFmpeg
             ffmpeg.avcodec_parameters_to_context(_codecCtx, _formatCtx->streams[_audioIndex]->codecpar).FFGuard();
             ffmpeg.avcodec_open2(_codecCtx, codec, null).FFGuard();
 
-            var opts = options ?? new FFmpegDecoderOptions();
             var channelLayout = _codecCtx->channel_layout <= 0
                 ? ffmpeg.av_get_default_channel_layout(_codecCtx->channels)
                 : (long)_codecCtx->channel_layout;
@@ -82,8 +96,8 @@ namespace Bufdio.Decoders.FFmpeg
                 channelLayout,
                 _codecCtx->sample_rate,
                 _codecCtx->sample_fmt,
-                opts.Channels,
-                opts.SampleRate
+                options.Channels,
+                options.SampleRate
             );
 
             var rational = ffmpeg.av_q2d(_formatCtx->streams[_audioIndex]->time_base);

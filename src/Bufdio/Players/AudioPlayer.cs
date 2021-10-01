@@ -27,6 +27,7 @@ namespace Bufdio.Players
         private readonly VolumeProcessor _volumeProcessor;
         private readonly IEnumerable<ISampleProcessor> _customProcessors;
         private readonly IAudioEngine _engine;
+        private FFmpegDecoderOptions _decoderOptions;
         private IAudioDecoder _currentDecoder;
         private Thread _currentDecoderThread;
         private Thread _currentEngineThread;
@@ -101,16 +102,16 @@ namespace Bufdio.Players
         
         /// <inheritdoc />
         /// <exception cref="ArgumentNullException">Thrown when given url is null.</exception>
-        public void Load(string url)
+        public void Load(string url, IReadOnlyDictionary<string, string> options = null)
         {
-            LoadInternal(url, null, true);
+            LoadInternal(url, null, true, options);
         }
 
         /// <inheritdoc />
         /// <exception cref="ArgumentNullException">Thrown when given stream is null.</exception>
-        public void Load(Stream stream)
+        public void Load(Stream stream, IReadOnlyDictionary<string, string> options = null)
         {
-            LoadInternal(null, stream, false);
+            LoadInternal(null, stream, false, options);
         }
 
         /// <inheritdoc />
@@ -215,7 +216,7 @@ namespace Bufdio.Players
         /// <returns>A new instance of <see cref="FFmpegDecoder"/>.</returns>
         protected virtual IAudioDecoder CreateDecoder(string url)
         {
-            return new FFmpegDecoder(url);
+            return new FFmpegDecoder(url, _decoderOptions);
         }
 
         /// <summary>
@@ -226,7 +227,7 @@ namespace Bufdio.Players
         /// <returns>A new instance of <see cref="FFmpegDecoder"/>.</returns>
         protected virtual IAudioDecoder CreateDecoder(Stream stream)
         {
-            return new FFmpegDecoder(stream);
+            return new FFmpegDecoder(stream, _decoderOptions);
         }
         
         /// <summary>
@@ -330,8 +331,10 @@ namespace Bufdio.Players
             FramePresented?.Invoke(this, frame);
         }
 
-        private void LoadInternal(string url, Stream stream, bool useUrl)
+        private void LoadInternal(string url, Stream stream, bool useUrl, IReadOnlyDictionary<string, string> options)
         {
+            _decoderOptions = new FFmpegDecoderOptions(demuxerOptions: options);
+
             Ensure.NotNull(useUrl ? url : stream, useUrl ? nameof(url) : nameof(stream));
             
             if (CurrentState != AudioPlayerState.Stopped)
