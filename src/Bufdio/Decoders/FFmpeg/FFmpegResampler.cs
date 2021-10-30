@@ -97,7 +97,7 @@ namespace Bufdio.Decoders.FFmpeg
             }
             
             var dstFrame = _dstFrame;
-            ffmpeg.av_free(&dstFrame);
+            ffmpeg.av_frame_free(&dstFrame);
 
             var swrCtx = _swrCtx;
             ffmpeg.swr_free(&swrCtx);
