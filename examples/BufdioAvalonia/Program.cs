@@ -52,6 +52,14 @@ namespace BufdioAvalonia
                 BufdioLib.InitializePortAudio($"{root}/libportaudio.dylib");
             }
 #endif
+            try
+            {
+                // Try initialize FFmpeg using system-wide libraries
+                BufdioLib.InitializeFFmpeg();
+            }
+            catch
+            {
+            }
         }
     }
 }

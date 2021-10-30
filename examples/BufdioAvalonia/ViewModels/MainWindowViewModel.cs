@@ -31,7 +31,7 @@ namespace BufdioAvalonia.ViewModels
         public MainWindowViewModel()
         {
             _echo = new EchoProcessor { IsEnabled = IsEchoEnabled };
-            
+
             _player = new AudioPlayer(customProcessors: new[] { _echo });
             _player.AudioLoaded += OnAudioLoaded;
             _player.LogCreated += OnLogCreated;
@@ -46,8 +46,11 @@ namespace BufdioAvalonia.ViewModels
             PlayPauseCommand = new DelegateCommand(ExecutePlayPauseCommand, CanExecutePlayPauseCommand);
             StopCommand = new DelegateCommand(ExecuteStopCommand);
             ClearLogsCommand = new DelegateCommand(ExecuteClearLogsCommand);
+
+            // FFmpeg might gets initialized in Program.cs
+            IsFFmpegInitialized = BufdioLib.IsFFmpegInitialized;
         }
-        
+
         public string Title
         {
             get => _title;
@@ -113,35 +116,35 @@ namespace BufdioAvalonia.ViewModels
             get => _isBuferring;
             set => SetProperty(ref _isBuferring, value);
         }
-        
+
         public ObservableCollection<AudioPlayerLog> Logs { get; }
 
         public ICommand OpenFileCommand { get; }
-        
+
         public ICommand OpenUrlCommand { get; }
-        
+
         public ICommand InitFFmpegCommand { get; }
 
         public ICommand PlayPauseCommand { get; }
-        
+
         public ICommand StopCommand { get; }
-        
+
         public ICommand ClearLogsCommand { get; }
 
         public async void Seek(double ms)
         {
             await Task.Run(() => _player.Seek(TimeSpan.FromMilliseconds(ms)));
         }
-        
+
         public void DisposePlayer()
         {
             _player.Dispose();
         }
-        
+
         protected override void OnPropertyChanged(string propertyName = null)
         {
             base.OnPropertyChanged(propertyName);
-            
+
             ((DelegateCommandBase)OpenFileCommand)?.RaiseCanExecuteChanged();
             ((DelegateCommandBase)OpenUrlCommand)?.RaiseCanExecuteChanged();
             ((DelegateCommandBase)InitFFmpegCommand)?.RaiseCanExecuteChanged();
@@ -152,26 +155,26 @@ namespace BufdioAvalonia.ViewModels
         {
             Duration = _player.TotalDuration ?? TimeSpan.Zero;
             Position = TimeSpan.Zero;
-            
+
             _player.Play();
         }
-        
+
         private void OnLogCreated(object sender, AudioPlayerLog e)
         {
             Dispatcher.UIThread.InvokeAsync(() => Logs.Add(e));
         }
-        
+
         private void OnStateChanged(object sender, EventArgs e)
         {
             IsBuferring = _player.CurrentState == AudioPlayerState.Buffering;
             PlayPauseText = _player.CurrentState == AudioPlayerState.Playing ? "Pause" : "Play";
         }
-        
+
         private void OnPositionChanged(object sender, EventArgs e)
         {
             Position = _player.CurrentPosition;
         }
-        
+
         private void OnPlaybackCompleted(object sender, EventArgs e)
         {
             if (IsRepeatEnabled)
@@ -183,12 +186,12 @@ namespace BufdioAvalonia.ViewModels
         private async void ExecuteOpenFileCommand()
         {
             var path = await _fd.OpenAsync();
-            
+
             if (!File.Exists(path))
             {
                 return;
             }
-            
+
             _player.Load(path);
         }
 
@@ -200,12 +203,12 @@ namespace BufdioAvalonia.ViewModels
         private async void ExecuteOpenUrlCommand()
         {
             var url = await _input.OpenAsync("Open Audio From URL");
-            
+
             if (url == null)
             {
                 return;
             }
-            
+
             await Task.Run(() => _player.Load(url));
         }
 
@@ -241,7 +244,7 @@ namespace BufdioAvalonia.ViewModels
             {
                 return;
             }
-            
+
             if (_player.CurrentState is AudioPlayerState.Paused or AudioPlayerState.Stopped)
             {
                 _player.Play();
@@ -261,7 +264,7 @@ namespace BufdioAvalonia.ViewModels
         {
             await Task.Run(_player.Stop);
         }
-        
+
         private void ExecuteClearLogsCommand()
         {
             Logs.Clear();
