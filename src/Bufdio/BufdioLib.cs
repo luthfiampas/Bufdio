@@ -21,7 +21,7 @@ namespace Bufdio
             public const AVSampleFormat FFmpegSampleFormat = AVSampleFormat.AV_SAMPLE_FMT_FLT;
             public const PaBinding.PaSampleFormat PaSampleFormat = PaBinding.PaSampleFormat.paFloat32;
         }
-        
+
         private static AudioDevice _defaultOutputDevice;
         private static List<AudioDevice> _outputDevices;
 
@@ -29,7 +29,7 @@ namespace Bufdio
         /// Gets whether or not the FFmpeg is already initialized.
         /// </summary>
         public static bool IsFFmpegInitialized { get; private set; }
-        
+
         /// <summary>
         /// Gets whether or not the PortAudio library is already initialized.
         /// </summary>
@@ -48,7 +48,7 @@ namespace Bufdio
                 return _defaultOutputDevice;
             }
         }
-        
+
         /// <summary>
         /// Gets list of available audio output devices in the current system.
         /// Will throws <see cref="BufdioException"/> if PortAudio is not initialized.
@@ -63,8 +63,8 @@ namespace Bufdio
         }
 
         /// <summary>
-        /// Initializes and register FFmpeg functionalities by providing path to FFmpeg native libraries.
-        /// Or just leave directory parameter empty in order to use system-wide libraries.
+        /// Initialize and register FFmpeg functionalities by providing path to FFmpeg native libraries.
+        /// Leave directory parameter empty in order to use system-wide libraries.
         /// Will returns immediately if already initialized.
         /// </summary>
         /// <param name="ffmpegDirectory">
@@ -83,33 +83,31 @@ namespace Bufdio
         }
 
         /// <summary>
-        /// Initializes and register PortAudio functionalities by providing path to PortAudio native libary.
-        /// Bufdio will use PortAudio to sends audio buffers to the output device.
-        /// This is required and cannot use system-wide libraries. Will returns immediately if already initialized.
+        /// Initialize and register PortAudio functionalities by providing path to PortAudio native libary.
+        /// Leave path parameter empty in order to use system-wide library.
+        /// Will returns immediately if already initialized.
         /// </summary>
         /// <param name="portAudioPath">
         /// Path to port audio native libary, eg: portaudio.dll, libportaudio.so, libportaudio.dylib.
         /// </param>
-        /// <exception cref="ArgumentNullException">Thrown when given path is null.</exception>
         /// <exception cref="BufdioException">Thrown when output device is not available.</exception>
-        public static void InitializePortAudio(string portAudioPath)
+        public static void InitializePortAudio(string portAudioPath = default)
         {
             if (IsPortAudioInitialized)
             {
                 return;
             }
-            
-            Ensure.NotNull(portAudioPath, nameof(portAudioPath));
-            PaBinding.InitializeBindings(new LibraryLoader(portAudioPath));
+
+            PaBinding.InitializeBindings(new LibraryLoader(portAudioPath ?? GetPortAudioLibName()));
             PaBinding.Pa_Initialize();
-            
+
             var deviceCount = PaBinding.Pa_GetDeviceCount();
             Ensure.That<BufdioException>(deviceCount > 0, "No output devices are available.");
 
             var defaultDevice = PaBinding.Pa_GetDefaultOutputDevice();
             _defaultOutputDevice = defaultDevice.PaGetPaDeviceInfo().PaToAudioDevice(defaultDevice);
             _outputDevices = new List<AudioDevice>();
-            
+
             for (var i = 0; i < deviceCount; i++)
             {
                 var deviceInfo = i.PaGetPaDeviceInfo();
@@ -121,6 +119,26 @@ namespace Bufdio
             }
 
             IsPortAudioInitialized = true;
+        }
+
+        private static string GetPortAudioLibName()
+        {
+            if (PlatformInfo.IsWindows)
+            {
+                return "libportaudio-2.dll";
+            }
+            else if (PlatformInfo.IsLinux)
+            {
+                return "libportaudio.so.2";
+            }
+            else if (PlatformInfo.IsOSX)
+            {
+                return "libportaudio.2.dylib";
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

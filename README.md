@@ -1,28 +1,27 @@
 # Bufdio
 [![NuGet](https://img.shields.io/nuget/v/Bufdio)](https://www.nuget.org/packages/Bufdio/)
 
-A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio especially in desktop environment.
+A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio especially in a desktop environment.
 
 This video demonstrate how to integrate Bufdio and [NWaves](https://github.com/ar1st0crat/NWaves/) to create realtime echo effect during playback (source code can be found at [examples directory](https://github.com/luthfiampas/Bufdio/tree/main/examples/BufdioAvalonia)).
 
 [![Bufdio Sample](https://i.ibb.co/FgWN3jt/bufdio-sample.png)](https://youtu.be/YM5CK2zG5T0)
 
-Behind the scene, it uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so it is possible to play video files by taking only audio stream). And [PortAudio](https://github.com/PortAudio/portaudio) for sending buffer data or samples to output device using blocking calls mechanism.
+Behind the scene, it uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play video files by taking its audio stream only). And [PortAudio](https://github.com/PortAudio/portaudio) for sending buffer data to output device using blocking calls mechanism.
 
 ## Getting Started
 This repository include pre-compiled PortAudio binaries for Windows, Linux, macOS that can be found at [libs directory](https://github.com/luthfiampas/Bufdio/tree/main/libs/PortAudio) (unfortunately, the Windows binaries does not include ASIO).
-
-As for FFmpeg, you can either install FFmpeg native libraries as system-wide libraries, or just instantiate Bufdio by providing path to FFmpeg libraries.
 
 ```csharp
 BufdioLib.InitializePortAudio("path/to/portaudio");
 BufdioLib.InitializeFFmpeg("path/to/ffmpeg/libraries");
 
 // Or just use system-wide libraries
+BufdioLib.InitializePortAudio();
 BufdioLib.InitializeFFmpeg();
 ```
 
-With PortAudio initialized, we can retrieve available output devices.
+With PortAudio initialized, now we can retrieve available output devices.
 
 ```csharp
 var defaultDevice = BufdioLib.DefaultOutputDevice;
