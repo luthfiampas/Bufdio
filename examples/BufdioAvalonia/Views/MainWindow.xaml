@@ -22,7 +22,7 @@
     <Grid ColumnDefinitions="*,Auto" Margin="5">
       <StackPanel Orientation="Horizontal">
         <Button Content="From File" Margin="0,0,1,0" Command="{Binding OpenFileCommand}" />
-        <Button Content="From URL" Command="{Binding OpenUrlCommand}" />
+        <Button Content="From URL or YouTube" Command="{Binding OpenUrlCommand}" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal">
         <Button Content="Initialize FFmpeg" Margin="0,0,1,0" Command="{Binding InitFFmpegCommand}" />

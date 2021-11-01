@@ -9,11 +9,15 @@ using Bufdio.Players;
 using BufdioAvalonia.Framework;
 using BufdioAvalonia.Processors;
 using BufdioAvalonia.Services;
+using YoutubeExplode;
+using YoutubeExplode.Videos;
+using YoutubeExplode.Videos.Streams;
 
 namespace BufdioAvalonia.ViewModels
 {
     public class MainWindowViewModel : BindableBase
     {
+        private readonly YoutubeClient _youtube = new YoutubeClient();
         private readonly IInputDialogService _input = new InputDialogService();
         private readonly IFileDialogService _fd = new FileDialogService();
         private readonly IAudioPlayer _player;
@@ -207,6 +211,19 @@ namespace BufdioAvalonia.ViewModels
             if (url == null)
             {
                 return;
+            }
+
+            if (url.Contains("youtube.com/watch?", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var manifest = await _youtube.Videos.Streams.GetManifestAsync(VideoId.Parse(url));
+                    url = manifest.GetAudioOnlyStreams().GetWithHighestBitrate().Url;
+                }
+                catch
+                {
+                    return;
+                }
             }
 
             await Task.Run(() => _player.Load(url));

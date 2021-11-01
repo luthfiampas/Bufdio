@@ -5,7 +5,7 @@ A cross-platform audio playback library that targets .NET Standard 2.1. The main
 
 This video demonstrate how to integrate Bufdio and [NWaves](https://github.com/ar1st0crat/NWaves/) to create realtime echo effect during playback (source code can be found at [examples directory](https://github.com/luthfiampas/Bufdio/tree/main/examples/BufdioAvalonia)).
 
-[![Bufdio Sample](https://i.ibb.co/FgWN3jt/bufdio-sample.png)](https://youtu.be/YM5CK2zG5T0)
+[![Bufdio Sample](https://i.ibb.co/ZmJMjJF/2021-11-02-02-46.png)](https://youtu.be/Bx22X20Tkj0)
 
 Behind the scene, it uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play video files by taking its audio stream only). And [PortAudio](https://github.com/PortAudio/portaudio) for sending buffer data to output device using blocking calls mechanism.
 
@@ -111,8 +111,9 @@ for (var i = 0; i < 10; i++)
 - [PortAudio](https://github.com/PortAudio/portaudio/)
 - [FFmpeg](https://www.ffmpeg.org/)
 - [FFmpeg.AutoGen](https://github.com/Ruslan-B/FFmpeg.AutoGen) (project dependency)
-- [NWaves](https://github.com/ar1st0crat/NWaves/) (used in sample project)
 - [Avalonia](https://github.com/AvaloniaUI/Avalonia) (used in sample project)
+- [NWaves](https://github.com/ar1st0crat/NWaves/) (used in sample project)
+- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) (used in sample project)
 
 ## Similar Projects
 - [SharpAudio](https://github.com/feliwir/SharpAudio)
