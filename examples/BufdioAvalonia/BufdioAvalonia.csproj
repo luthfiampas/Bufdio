@@ -25,11 +25,11 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(Configuration)|$(RuntimeIdentifier)' == 'Release|win-x64' ">
-    <None Include="../../libs/PortAudio/win-x64/portaudio.dll" Link="libs/portaudio.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../libs/PortAudio/win-x64/libportaudio.dll" Link="libs/libportaudio.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(Configuration)|$(RuntimeIdentifier)' == 'Release|win-x86' ">
-    <None Include="../../libs/PortAudio/win-x86/portaudio.dll" Link="libs/portaudio.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../libs/PortAudio/win-x86/libportaudio.dll" Link="libs/libportaudio.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(Configuration)|$(RuntimeIdentifier)' == 'Release|linux-x64' ">
