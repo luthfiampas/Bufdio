@@ -52,8 +52,14 @@ namespace Bufdio.Decoders.FFmpeg
                 _formatCtx->pb = avio;
             }
 
+            // Open and read operations (like av_read_frame) are blocked by default.
+            // We need to set http, udp and rstp read timeout, in case connection interrupted.
+            AVDictionary* dict = null;
+            ffmpeg.av_dict_set_int(&dict, "stimeout", 10, 0);
+            ffmpeg.av_dict_set_int(&dict, "timeout", 10, 0);
+
             var formatCtx = _formatCtx;
-            ffmpeg.avformat_open_input(&formatCtx, useUrl ? url : null, null, null).FFGuard();
+            ffmpeg.avformat_open_input(&formatCtx, useUrl ? url : null, null, &dict).FFGuard();
             ffmpeg.avformat_find_stream_info(_formatCtx, null).FFGuard();
 
             AVCodec* codec = null;
@@ -90,11 +96,11 @@ namespace Bufdio.Decoders.FFmpeg
             var duration = _formatCtx->streams[_audioIndex]->duration * rational * 1000.00;
             duration = duration > 0 ? duration : _formatCtx->duration / 1000.00;
             StreamInfo = new AudioStreamInfo(_codecCtx->channels, _codecCtx->sample_rate, duration.Milliseconds());
-            
+
             _currentPacket = ffmpeg.av_packet_alloc();
             _currentFrame = ffmpeg.av_frame_alloc();
         }
-        
+
         /// <summary>
         /// Instantiate a new <see cref="FFmpegDecoder"/> by providing audio URL.
         /// The audio URL can be HTTP URL or path to local audio file.
@@ -143,9 +149,9 @@ namespace Bufdio.Decoders.FFmpeg
                             ffmpeg.av_packet_unref(_currentPacket);
                             return new AudioDecoderResult(null, false, code.FFIsEOF(), code.FFErrorToText());
                         }
-                        
+
                     } while (_currentPacket->stream_index != _audioIndex);
-                    
+
                     ffmpeg.avcodec_send_packet(_codecCtx, _currentPacket);
                     ffmpeg.av_packet_unref(_currentPacket);
                     code = ffmpeg.avcodec_receive_frame(_codecCtx, _currentFrame);
@@ -186,18 +192,15 @@ namespace Bufdio.Decoders.FFmpeg
         /// <inheritdoc />
         public bool TrySeek(TimeSpan position, out string error)
         {
-            lock (_syncLock)
-            {
-                var tb = _formatCtx->streams[_audioIndex]->time_base;
-                var pos = (long)(position.TotalSeconds * ffmpeg.AV_TIME_BASE);
-                var ts = ffmpeg.av_rescale_q(pos, ffmpeg.av_get_time_base_q(), tb);
+            var tb = _formatCtx->streams[_audioIndex]->time_base;
+            var pos = (long)(position.TotalSeconds * ffmpeg.AV_TIME_BASE);
+            var ts = ffmpeg.av_rescale_q(pos, ffmpeg.av_get_time_base_q(), tb);
 
-                var code = ffmpeg.avformat_seek_file(_formatCtx, _audioIndex, 0, ts, long.MaxValue, 0);
-                ffmpeg.avcodec_flush_buffers(_codecCtx);
+            var code = ffmpeg.avformat_seek_file(_formatCtx, _audioIndex, 0, ts, long.MaxValue, 0);
+            ffmpeg.avcodec_flush_buffers(_codecCtx);
 
-                error = code.FFIsError() ? code.FFErrorToText() : null;
-                return !code.FFIsError();
-            }
+            error = code.FFIsError() ? code.FFErrorToText() : null;
+            return !code.FFIsError();
         }
 
         private int ReadsImpl(void* opaque, byte* buf, int buf_size)
