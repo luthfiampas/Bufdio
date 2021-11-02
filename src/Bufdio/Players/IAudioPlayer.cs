@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Bufdio.Players
@@ -74,13 +75,15 @@ namespace Bufdio.Players
         /// Loads audio from specified URL to the player. The URL might be HTTP URL or local file path.
         /// </summary>
         /// <param name="url">Audio URL or audio file path.</param>
-        void Load(string url);
+        /// <param name="options">Options for loading the audio file.</param>
+        void Load(string url, IReadOnlyDictionary<string, string> options = null);
 
         /// <summary>
         /// Loads audio stream to the player.
         /// </summary>
         /// <param name="stream">Source audio stream.</param>
-        void Load(Stream stream);
+        /// <param name="options">Options to pass when loading the audio file.</param>
+        void Load(Stream stream, IReadOnlyDictionary<string, string> options = null);
 
         /// <summary>
         /// Starts audio playback.
