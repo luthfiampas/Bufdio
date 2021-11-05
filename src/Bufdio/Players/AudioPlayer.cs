@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
+using Bufdio.Common;
 using Bufdio.Decoders;
 using Bufdio.Decoders.FFmpeg;
 using Bufdio.Engines;
@@ -15,521 +16,484 @@ using Bufdio.Utilities.Extensions;
 namespace Bufdio.Players
 {
     /// <summary>
-    /// Provides functionalities for loading and controlling playback from given audio file.
-    /// The source audio can be remote audio URL, local file and .NET Stream.
-    /// <para>Implements: <see cref="IAudioPlayer"/>.</para>
+    /// An implementation of <see cref="IAudioPlayer"/> interface that provides functionalities
+    /// for loading and controlling audio playback.
+    /// <para>Implements: <see cref="IAudioPlayer"/></para>
     /// </summary>
     public class AudioPlayer : IAudioPlayer
     {
-        private const int MinQueueSize = 3;
-        private const int MaxQueueSize = 10;
-        private readonly ConcurrentQueue<AudioFrame> _queue;
-        private readonly VolumeProcessor _volumeProcessor;
-        private readonly IEnumerable<ISampleProcessor> _customProcessors;
-        private readonly IAudioEngine _engine;
-        private IAudioDecoder _currentDecoder;
-        private Thread _currentDecoderThread;
-        private Thread _currentEngineThread;
-        private bool _eof;
-        private bool _seeking;
+        private const int MinQueueSize = 8;
+        private const int MaxQueueSize = 128;
         private bool _disposed;
-        
-        /// <summary>
-        /// Instantiate a new <see cref="AudioPlayer"/> instance.
-        /// </summary>
-        /// <param name="engine">An audio engine instance.</param>
-        /// <param name="customProcessors">
-        /// Custom sample processors to change audio samples before writing them to output device.
-        /// </param>
-        public AudioPlayer(IAudioEngine engine = default, IEnumerable<ISampleProcessor> customProcessors = default)
-        {
-            CurrentState = AudioPlayerState.Stopped;
-            CurrentVolume = 1.0f;
 
-            _engine = engine ?? new PortAudioEngine();
-            _customProcessors = customProcessors;
-            
-            _queue = new ConcurrentQueue<AudioFrame>();
-            _volumeProcessor = new VolumeProcessor(CurrentVolume);
+        /// <summary>
+        /// Intializes <see cref="AudioPlayer"/> instance by providing <see cref="IAudioEngine"/> instance.
+        /// </summary>
+        /// <param name="engine">An <see cref="IAudioEngine"/> instance.</param>
+        public AudioPlayer(IAudioEngine engine)
+        {
+            Ensure.NotNull(engine, nameof(engine));
+            Engine = engine;
+            VolumeProcessor = new VolumeProcessor { Volume = 1 };
+            Queue = new ConcurrentQueue<AudioFrame>();
+        }
+
+        /// <summary>
+        /// Intializes <see cref="AudioPlayer"/> instance by using default audio engine.
+        /// </summary>
+        public AudioPlayer() : this(new PortAudioEngine())
+        {
         }
 
         /// <inheritdoc />
-        public event EventHandler AudioLoaded;
-        
-        /// <inheritdoc />
         public event EventHandler StateChanged;
-        
+
         /// <inheritdoc />
         public event EventHandler PositionChanged;
-        
+
         /// <inheritdoc />
-        public event EventHandler PlaybackCompleted;
-        
+        public bool IsLoaded { get; protected set; }
+
         /// <inheritdoc />
-        public event EventHandler<AudioPlayerLog> LogCreated;
-        
+        public TimeSpan Duration { get; protected set; }
+
         /// <inheritdoc />
-        public event EventHandler<AudioFrame> FrameDecoded;
-        
+        public TimeSpan Position { get; protected set; }
+
         /// <inheritdoc />
-        public event EventHandler<AudioFrame> FramePresented;
-        
+        public PlaybackState State { get; protected set; }
+
         /// <inheritdoc />
-        public bool IsAudioLoaded { get; private set; }
-        
+        public bool IsSeeking { get; private set; }
+
         /// <inheritdoc />
-        public TimeSpan? TotalDuration { get; private set; }
-        
+        public float Volume
+        {
+            get => VolumeProcessor.Volume;
+            set => VolumeProcessor.Volume = value.VerifyVolume();
+        }
+
         /// <inheritdoc />
-        public TimeSpan CurrentPosition { get; private set; }
-        
+        public ISampleProcessor CustomSampleProcessor { get; set; }
+
         /// <inheritdoc />
-        public float CurrentVolume { get; private set; }
-        
-        /// <inheritdoc />
-        public AudioPlayerState CurrentState { get; private set; }
-        
+        public ILogger Logger { get; set; }
+
         /// <summary>
-        /// Gets or sets current audio URL.
+        /// Gets or sets current <see cref="IAudioDecoder"/> instance.
+        /// </summary>
+        protected IAudioDecoder CurrentDecoder { get; set; }
+
+        /// <summary>
+        /// Gets or sets current specified audio URL.
         /// </summary>
         protected string CurrentUrl { get; set; }
-        
+
         /// <summary>
-        /// Gets or sets current audio input stream.
+        /// Gets or sets current specified audio stream.
         /// </summary>
         protected Stream CurrentStream { get; set; }
-        
+
+        /// <summary>
+        /// Gets <see cref="IAudioEngine"/> instance.
+        /// </summary>
+        protected IAudioEngine Engine { get; }
+
+        /// <summary>
+        /// Gets <see cref="VolumeProcessor"/> instance.
+        /// </summary>
+        protected VolumeProcessor VolumeProcessor { get; }
+
+        /// <summary>
+        /// Gets queue object that holds queued audio frames.
+        /// </summary>
+        protected ConcurrentQueue<AudioFrame> Queue { get; }
+
+        /// <summary>
+        /// Gets current audio decoder thread.
+        /// </summary>
+        protected Thread DecoderThread { get; private set; }
+
+        /// <summary>
+        /// Gets current audio engine thread.
+        /// </summary>
+        protected Thread EngineThread { get; private set; }
+
+        /// <summary>
+        /// Gets whether or not the decoder thread reach end of file.
+        /// </summary>
+        protected bool IsEOF { get; private set; }
+
         /// <inheritdoc />
         /// <exception cref="ArgumentNullException">Thrown when given url is null.</exception>
-        public void Load(string url)
+        public Task<bool> LoadAsync(string url)
         {
-            LoadInternal(url, null, true);
+            Ensure.NotNull(url, nameof(url));
+            Ensure.That<BufdioException>(State == PlaybackState.Idle, "Playback thread is currently running.");
+
+            LoadInternal(() => CreateDecoder(url));
+
+            if (IsLoaded)
+            {
+                CurrentUrl = url;
+                CurrentStream = null;
+            }
+
+            return Task.FromResult(IsLoaded);
         }
 
         /// <inheritdoc />
         /// <exception cref="ArgumentNullException">Thrown when given stream is null.</exception>
-        public void Load(Stream stream)
+        public Task<bool> LoadAsync(Stream stream)
         {
-            LoadInternal(null, stream, false);
+            Ensure.NotNull(stream, nameof(stream));
+            Ensure.That<BufdioException>(State == PlaybackState.Idle, "Playback thread is currently running.");
+
+            LoadInternal(() => CreateDecoder(stream));
+
+            if (IsLoaded)
+            {
+                CurrentUrl = null;
+                CurrentStream = stream;
+            }
+
+            return Task.FromResult(IsLoaded);
         }
 
         /// <inheritdoc />
-        /// <exception cref="BufdioException">Thrown when audio is not loaded to this player.</exception>
+        /// <exception cref="BufdioException">Thrown when audio is not loaded.</exception>
         public void Play()
         {
-            if (!IsAudioLoaded)
-            {
-                throw new BufdioException("This player does not have loaded audio for playback.");
-            }
-            
-            if (CurrentState is AudioPlayerState.Playing or AudioPlayerState.Buffering)
+            Ensure.That<BufdioException>(IsLoaded, "No loaded audio for playback.");
+
+            if (State is PlaybackState.Playing or PlaybackState.Buffering)
             {
                 return;
             }
-            
-            if (CurrentState == AudioPlayerState.Paused)
+
+            if (State == PlaybackState.Paused)
             {
-                CurrentState = AudioPlayerState.Playing;
-                OnStateChanged();
+                SetAndRaiseStateChanged(PlaybackState.Playing);
                 return;
             }
-            
-            _eof = false;
-            
-            CurrentState = AudioPlayerState.Playing;
-            OnStateChanged();
-            
-            _currentDecoderThread = new Thread(RunDecoder) { IsBackground = true };
-            _currentEngineThread = new Thread(RunEngine) { IsBackground = true };
-            _currentDecoderThread.Start();
-            _currentEngineThread.Start();
+
+            EnsureThreadsDone();
+
+            Seek(Position);
+            IsEOF = false;
+
+            DecoderThread = new Thread(RunDecoder) { Name = "Decoder Thread", IsBackground = true };
+            EngineThread = new Thread(RunEngine) { Name = "Engine Thread", IsBackground = true };
+
+            SetAndRaiseStateChanged(PlaybackState.Playing);
+
+            DecoderThread.Start();
+            EngineThread.Start();
         }
 
         /// <inheritdoc />
         public void Pause()
         {
-            if (CurrentState != AudioPlayerState.Playing)
+            if (State is PlaybackState.Playing or PlaybackState.Buffering)
             {
-                return;
+                SetAndRaiseStateChanged(PlaybackState.Paused);
             }
-            
-            CurrentState = AudioPlayerState.Paused;
-            OnStateChanged();
-        }
-
-        /// <inheritdoc />
-        public void Stop()
-        {
-            if (CurrentState == AudioPlayerState.Stopped)
-            {
-                return;
-            }
-
-            CurrentState = AudioPlayerState.Stopped;
-            EnsureThreadsDone();
-            OnStateChanged();
-            
-            Seek(TimeSpan.Zero);
-        }
-
-        /// <inheritdoc />
-        public void SetVolume(float volume)
-        {
-            CurrentVolume = _volumeProcessor.Volume = volume.VerifyVolume();
         }
 
         /// <inheritdoc />
         public void Seek(TimeSpan position)
         {
-            if (!IsAudioLoaded || _seeking || _currentDecoder == null)
+            if (!IsLoaded || IsSeeking || CurrentDecoder == null)
             {
-                return;
-            }
-            
-            OnLogCreated(AudioPlayerLog.Info($"Seeking to {position}."));
-            
-            _seeking = true;
-            
-            if (!_currentDecoder.TrySeek(position, out var error))
-            {
-                OnLogCreated(AudioPlayerLog.Warning($"Unable to seek audio stream: {error}"));
-                _seeking = false;
                 return;
             }
 
-            _queue.Clear();
-            
-            // Do not raise position changed event.
-            // Decoder does not guarantee that audio stream will gets seeked instantly.
-            CurrentPosition = position;
-            OnLogCreated(AudioPlayerLog.Info("Successfully seeks."));
-            
-            _seeking = false;
+            IsSeeking = true;
+            Queue.Clear();
+
+            // Sleep to produce smooth seek
+            if (DecoderThread is { IsAlive: true } || EngineThread is { IsAlive: true })
+            {
+                Thread.Sleep(100);
+            }
+
+            Logger?.LogInfo($"Seeking to: {position}.");
+
+            if (!CurrentDecoder.TrySeek(position, out var error))
+            {
+                Logger?.LogError($"Unable to seek audio stream: {error}");
+                IsSeeking = false;
+                return;
+            }
+
+            IsSeeking = false;
+            SetAndRaisePositionChanged(position);
+
+            Logger?.LogInfo($"Successfully seeks to {position}.");
+        }
+
+        /// <inheritdoc />
+        public void Stop()
+        {
+            if (State == PlaybackState.Idle)
+            {
+                return;
+            }
+
+            State = PlaybackState.Idle;
+            EnsureThreadsDone();
+            StateChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Creates a new audio decoder by loading audio source from specified URL.
-        /// By default this will returns a new <see cref="FFmpegDecoder"/> instance.
+        /// Creates an <see cref="IAudioDecoder"/> instance.
+        /// By default, it will returns a new <see cref="FFmpegDecoder"/> instance.
         /// </summary>
-        /// <param name="url">Audio URL or path to audio file.</param>
-        /// <returns>A new instance of <see cref="FFmpegDecoder"/>.</returns>
+        /// <param name="url">Audio URL or path to be loaded.</param>
+        /// <returns>A new <see cref="FFmpegDecoder"/> instance.</returns>
         protected virtual IAudioDecoder CreateDecoder(string url)
         {
             return new FFmpegDecoder(url);
         }
 
         /// <summary>
-        /// Creates a new audio decoder by loading audio source from specified stream.
-        /// By default this will returns a new <see cref="FFmpegDecoder"/> instance.
+        /// Creates an <see cref="IAudioDecoder"/> instance.
+        /// By default, it will returns a new <see cref="FFmpegDecoder"/> instance.
         /// </summary>
-        /// <param name="stream">Source of audio stream to loads to.</param>
-        /// <returns>A new instance of <see cref="FFmpegDecoder"/>.</returns>
+        /// <param name="stream">Audio stream to be loaded.</param>
+        /// <returns>A new <see cref="FFmpegDecoder"/> instance.</returns>
         protected virtual IAudioDecoder CreateDecoder(Stream stream)
         {
             return new FFmpegDecoder(stream);
         }
-        
+
         /// <summary>
-        /// Executed when the decoder failed to decode audio frame.
-        /// By default, this will re-instantiate current decoder and seeks to the current position.
+        /// Sets <see cref="State"/> value and raise <see cref="StateChanged"/> if value is changed.
+        /// </summary>
+        /// <param name="state">Playback state.</param>
+        protected virtual void SetAndRaiseStateChanged(PlaybackState state)
+        {
+            var raise = State != state;
+            State = state;
+
+            if (raise && StateChanged != null)
+            {
+                StateChanged.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Sets <see cref="Position"/> value and raise <see cref="PositionChanged"/> if value is changed.
+        /// </summary>
+        /// <param name="position">Playback position.</param>
+        protected virtual void SetAndRaisePositionChanged(TimeSpan position)
+        {
+            var raise = position != Position;
+            Position = position;
+
+            if (raise && PositionChanged != null)
+            {
+                PositionChanged.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Handles audio decoder error, returns <c>true</c> to continue decoder thread, <c>false</c> will
+        /// break the thread. By default, this will try to re-initialize <see cref="CurrentDecoder"/>
+        /// and seeks to the last position.
         /// </summary>
         /// <param name="result">Failed audio decoder result.</param>
-        /// <returns><c>true</c> to continue decoder thread, <c>false</c> to break.</returns>
-        protected virtual bool OnDecoderFailed(AudioDecoderResult result)
+        /// <returns><c>true</c> will continue decoder thread, <c>false</c> will break the thread.</returns>
+        protected virtual bool HandleDecoderError(AudioDecoderResult result)
         {
-            _queue.Clear();
+            Queue.Clear();
+            Logger?.LogWarning($"Failed to decode audio frame, retrying: {result.ErrorMessage}");
 
-            OnLogCreated(AudioPlayerLog.Error($"Failed to decode frame: {result.ErrorMessage}. Retrying.."));
-            
-            _currentDecoder.Dispose();
-            _currentDecoder = null;
+            CurrentDecoder?.Dispose();
+            CurrentDecoder = null;
 
-            IsAudioLoaded = false;
-
-            while (_currentDecoder == null)
+            while (CurrentDecoder == null)
             {
-                if (CurrentState == AudioPlayerState.Stopped)
+                if (State == PlaybackState.Idle)
                 {
+                    IsLoaded = false;
                     return false;
                 }
 
                 try
                 {
-                    _currentDecoder = CurrentUrl != null ? CreateDecoder(CurrentUrl) : CreateDecoder(CurrentStream);
-
-                    IsAudioLoaded = true;
-                    OnAudioLoaded();
+                    CurrentDecoder = CurrentUrl != null ? CreateDecoder(CurrentUrl) : CreateDecoder(CurrentStream);
+                    break;
                 }
-                catch (FFmpegException)
+                catch (Exception ex)
                 {
-                    _currentDecoder = null;
-                    Thread.Sleep(10);
+                    Logger?.LogWarning($"Unable to recreate audio decoder, retrying: {ex.Message}");
+                    Thread.Sleep(1000);
                 }
             }
-            
-            Seek(CurrentPosition);
+
+            Logger?.LogInfo($"Audio decoder has been recreated, seeking to the last position ({Position}).");
+            Seek(Position);
+
             return true;
         }
 
         /// <summary>
-        /// Invokes <see cref="AudioLoaded"/> event,
+        /// Run <see cref="VolumeProcessor"/> and <see cref="CustomSampleProcessor"/> to the specified samples.
         /// </summary>
-        protected virtual void OnAudioLoaded()
+        /// <param name="samples">Audio samples to process to.</param>
+        protected virtual void ProcessSampleProcessors(Span<float> samples)
         {
-            AudioLoaded?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="StateChanged"/> event.
-        /// </summary>
-        protected virtual void OnStateChanged()
-        {
-            StateChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="PositionChanged"/> event.
-        /// </summary>
-        protected virtual void OnPositionChanged()
-        {
-            PositionChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="PlaybackCompleted"/> event.
-        /// </summary>
-        protected virtual void OnPlaybackCompleted()
-        {
-            PlaybackCompleted?.Invoke(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="LogCreated"/> event.
-        /// </summary>
-        /// <param name="log">Log object.</param>
-        protected virtual void OnLogCreated(AudioPlayerLog log)
-        {
-            LogCreated?.Invoke(this, log);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="OnFrameDecoded"/> event.
-        /// </summary>
-        /// <param name="frame">Decoded audio frame.</param>
-        protected virtual void OnFrameDecoded(AudioFrame frame)
-        {
-            FrameDecoded?.Invoke(this, frame);
-        }
-
-        /// <summary>
-        /// Invokes <see cref="OnFramePresented"/> event.
-        /// </summary>
-        /// <param name="frame">Presented audio frame.</param>
-        protected virtual void OnFramePresented(AudioFrame frame)
-        {
-            FramePresented?.Invoke(this, frame);
-        }
-
-        private void LoadInternal(string url, Stream stream, bool useUrl)
-        {
-            Ensure.NotNull(useUrl ? url : stream, useUrl ? nameof(url) : nameof(stream));
-            
-            if (CurrentState != AudioPlayerState.Stopped)
+            if (CustomSampleProcessor is { IsEnabled: true })
             {
-                Stop();
+                for (var i = 0; i < samples.Length; i++)
+                {
+                    samples[i] = CustomSampleProcessor.Process(samples[i]);
+                }
             }
-            
-            OnLogCreated(AudioPlayerLog.Info("Loading audio stream."));
+
+            if (VolumeProcessor.Volume != 1.0f)
+            {
+                for (var i = 0; i < samples.Length; i++)
+                {
+                    samples[i] = VolumeProcessor.Process(samples[i]);
+                }
+            }
+        }
+
+        private void LoadInternal(Func<IAudioDecoder> decoderFactory)
+        {
+            Logger?.LogInfo("Loading audio to the player.");
+
+            CurrentDecoder?.Dispose();
+            CurrentDecoder = null;
+            IsLoaded = false;
 
             try
             {
-                _currentDecoder?.Dispose();
-                _currentDecoder = null;
-                _currentDecoder = useUrl ? CreateDecoder(url) : CreateDecoder(stream);
-                
-                TotalDuration = _currentDecoder.StreamInfo.Duration;
-                IsAudioLoaded = true;
-                
-                OnAudioLoaded();
-                OnLogCreated(AudioPlayerLog.Info("Audio is loaded."));
-            }
-            catch (FFmpegException fex)
-            {
-                _currentDecoder = null;
-                
-                IsAudioLoaded = false;
-                TotalDuration = null;
+                CurrentDecoder = decoderFactory();
+                Duration = CurrentDecoder.StreamInfo.Duration;
 
-                OnLogCreated(AudioPlayerLog.Error(fex.Message));
+                Logger?.LogInfo("Audio successfully loaded.");
+                IsLoaded = true;
             }
-            
-            _queue.Clear();
-            
-            CurrentPosition = TimeSpan.Zero;
-            OnPositionChanged();
-            
-            CurrentUrl = url;
-            CurrentStream = stream;
+            catch (Exception ex)
+            {
+                CurrentDecoder = null;
+                Logger?.LogError($"Failed to load audio: {ex.Message}");
+                IsLoaded = false;
+            }
+
+            SetAndRaisePositionChanged(TimeSpan.Zero);
         }
-        
+
         private void RunDecoder()
         {
-            OnLogCreated(AudioPlayerLog.Info("Audio decoder thread is started."));
-            
-            while (CurrentState != AudioPlayerState.Stopped)
+            Logger?.LogInfo("Decoder thread is started.");
+
+            while (State != PlaybackState.Idle)
             {
-                if (_seeking)
+                LoopHelper.While(() => IsSeeking, () => State == PlaybackState.Idle, () =>
                 {
+                    Queue.Clear();
                     Thread.Sleep(10);
-                    continue;
-                }
-                
-                var result = _currentDecoder.DecodeNextFrame();
-                
+                });
+
+                var result = CurrentDecoder.DecodeNextFrame();
+
                 if (result.IsEOF)
                 {
-                    _eof = true;
-                    break;
-                }
-                
-                if (!result.IsSucceeded)
-                {
-                    if (OnDecoderFailed(result))
+                    IsEOF = true;
+                    EngineThread.EnsureThreadDone(() => IsSeeking);
+
+                    if (IsSeeking)
                     {
+                        IsEOF = false;
+                        Queue.Clear();
+
                         continue;
                     }
 
                     break;
                 }
-                
-                while (_queue.Count >= MaxQueueSize)
+
+                if (!result.IsSucceeded)
                 {
-                    if (CurrentState == AudioPlayerState.Stopped)
+                    if (HandleDecoderError(result))
                     {
-                        break;
+                        continue;
                     }
-                    
-                    Thread.Sleep(10);
+
+                    IsEOF = true; // ends the engine thread
+                    break;
                 }
-                
-                RunCustomSampleProcessors(result.Frame);
-                OnFrameDecoded(result.Frame);
-                
-                _queue.Enqueue(result.Frame);
+
+                LoopHelper.While(
+                    () => Queue.Count >= MaxQueueSize,
+                    () => State == PlaybackState.Idle,
+                    () => Thread.Sleep(100));
+
+                Queue.Enqueue(result.Frame);
             }
-            
-            OnLogCreated(AudioPlayerLog.Info("Audio decoder thread is completed."));
+
+            Logger?.LogInfo("Decoder thread is completed.");
         }
-        
+
         private void RunEngine()
         {
-            OnLogCreated(AudioPlayerLog.Info("Audio engine thread is started."));
-            
-            while (CurrentState != AudioPlayerState.Stopped)
+            Logger?.LogInfo("Engine thread is started.");
+
+            while (State != PlaybackState.Idle)
             {
-                if (CurrentState == AudioPlayerState.Paused)
+                if (State == PlaybackState.Paused || IsSeeking)
                 {
                     Thread.Sleep(10);
                     continue;
                 }
-                
-                if (_queue.Count < MinQueueSize)
+
+                if (Queue.Count < MinQueueSize && !IsEOF)
                 {
-                    if (_eof)
+                    SetAndRaiseStateChanged(PlaybackState.Buffering);
+                    Thread.Sleep(10);
+                    continue;
+                }
+
+                if (!Queue.TryDequeue(out var frame))
+                {
+                    if (IsEOF)
                     {
                         break;
                     }
 
-                    if (CurrentState != AudioPlayerState.Buffering)
-                    {
-                        OnLogCreated(AudioPlayerLog.Info("Insufficient queue, buferring.."));
-                        CurrentState = AudioPlayerState.Buffering;
-                        OnStateChanged();
-                    }
-
-                    Thread.Sleep(100);
+                    Thread.Sleep(10);
                     continue;
-                }
-                
-                if (!_queue.TryDequeue(out var frame))
-                {
-                    continue;
-                }
-                
-                if (CurrentState != AudioPlayerState.Playing)
-                {
-                    CurrentState = AudioPlayerState.Playing;
-                    OnStateChanged();
                 }
 
                 var samples = MemoryMarshal.Cast<byte, float>(frame.Data);
+                ProcessSampleProcessors(samples);
 
-                for (var i = 0; i < samples.Length; i++)
-                {
-                    samples[i] = _volumeProcessor.Process(samples[i]);
-                }
-
-                _engine.Send(samples);
-                OnFramePresented(frame);
-                
-                CurrentPosition = frame.PresentationTime.Milliseconds();
-                OnPositionChanged();
+                SetAndRaiseStateChanged(PlaybackState.Playing);
+                Engine.Send(samples);
+                SetAndRaisePositionChanged(TimeSpan.FromMilliseconds(frame.PresentationTime));
             }
 
-            if (_eof)
-            {
-                Seek(TimeSpan.Zero);
-            }
-            
-            if (CurrentPosition != TimeSpan.Zero)
-            {
-                CurrentPosition = TimeSpan.Zero;
-                OnPositionChanged();
-            }
-            
-            if (CurrentState != AudioPlayerState.Stopped)
-            {
-                CurrentState = AudioPlayerState.Stopped;
-                OnStateChanged();
-            }
+            // Don't calls Seek(), the Play() method will do the job! The Seek() method will sets
+            // IsSeeking to true. This can be an endless cycle since the decoder thread will spins for
+            // engine thread to complete and break the spin when IsSeeking value is true.
+            SetAndRaisePositionChanged(TimeSpan.Zero);
 
-            if (_eof)
-            {
-                OnPlaybackCompleted();
-            }
-            
-            OnLogCreated(AudioPlayerLog.Info("Audio engine thread is completed."));
-        }
-        
-        private void RunCustomSampleProcessors(AudioFrame frame)
-        {
-            if (_customProcessors == null)
-            {
-                return;
-            }
-
-            var samples = MemoryMarshal.Cast<byte, float>(frame.Data);
-
-            foreach (var processor in _customProcessors)
-            {
-                if (!processor.IsEnabled)
-                {
-                    continue;
-                }
-
-                for (var i = 0; i < samples.Length; i++)
-                {
-                    samples[i] = processor.Process(samples[i]);
-                }
-            }
+            // Just fire and forget, and it should be non-blocking event.
+            Task.Run(() => SetAndRaiseStateChanged(PlaybackState.Idle));
+            Logger?.LogInfo("Engine thread is completed.");
         }
 
         private void EnsureThreadsDone()
         {
-            _currentDecoderThread?.EnsureThreadDone();
-            _currentDecoderThread = null;
-            _currentEngineThread?.EnsureThreadDone();
-            _currentEngineThread = null;
+            EngineThread?.EnsureThreadDone();
+            DecoderThread?.EnsureThreadDone();
+
+            EngineThread = null;
+            DecoderThread = null;
         }
 
         /// <inheritdoc />
@@ -540,15 +504,14 @@ namespace Bufdio.Players
                 return;
             }
 
-            CurrentState = AudioPlayerState.Stopped;
+            State = PlaybackState.Idle;
+
             EnsureThreadsDone();
-
-            _engine.Dispose();
-            _currentDecoder?.Dispose();
-            _queue.Clear();
-
+            Engine.Dispose();
+            CurrentDecoder?.Dispose();
+            Queue.Clear();
             GC.SuppressFinalize(this);
-            
+
             _disposed = true;
         }
     }

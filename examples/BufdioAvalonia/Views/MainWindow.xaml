@@ -49,6 +49,7 @@
         <TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanFormatConverter}}" />
         <ProgressBar Grid.Column="1"
                      Name="ProgressBar"
+                     IsIndeterminate="False"
                      Margin="10,0"
                      Minimum="0"
                      Maximum="{Binding Duration, Converter={StaticResource TimeSpanMsConverter}}"

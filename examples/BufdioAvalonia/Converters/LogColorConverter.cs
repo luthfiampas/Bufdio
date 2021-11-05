@@ -2,7 +2,7 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Bufdio.Players;
+using BufdioAvalonia.Common;
 
 namespace BufdioAvalonia.Converters
 {
@@ -10,15 +10,15 @@ namespace BufdioAvalonia.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is not AudioPlayerLog log)
+            if (value is not Log log)
             {
                 return null;
             }
 
             return log.Type switch
             {
-                AudioPlayerLogType.Error => Brush.Parse("#fc5b5b"),
-                AudioPlayerLogType.Warning => Brush.Parse("#f5d664"),
+                Log.LogType.Error => Brush.Parse("#fc5b5b"),
+                Log.LogType.Warning => Brush.Parse("#f5d664"),
                 _ => Brush.Parse("#ffffff")
             };
         }

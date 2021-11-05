@@ -28,9 +28,8 @@ namespace BufdioAvalonia.Views
             var ratio = e.GetPosition(_bar).X / _bar.Bounds.Width;
             var value = ratio * _bar.Maximum;
             
-            vm.Seek(value);
-
             _bar.Value = value;
+            vm.Seek(value);
         }
 
         protected override void OnClosing(CancelEventArgs e)

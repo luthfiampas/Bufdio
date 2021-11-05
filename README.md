@@ -10,7 +10,7 @@ This video demonstrate how to integrate Bufdio and [NWaves](https://github.com/a
 Behind the scene, it uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play video files by taking its audio stream only). And [PortAudio](https://github.com/PortAudio/portaudio) for sending buffer data to output device using blocking calls mechanism.
 
 ## Getting Started
-This repository include pre-compiled PortAudio binaries for Windows, Linux, macOS that can be found at [libs directory](https://github.com/luthfiampas/Bufdio/tree/main/libs/PortAudio) (unfortunately, the Windows binaries does not include ASIO).
+This repository include pre-compiled PortAudio binaries for Windows, Linux, macOS that can be found at the [libs directory](https://github.com/luthfiampas/Bufdio/tree/main/libs/PortAudio).
 
 ```csharp
 BufdioLib.InitializePortAudio("path/to/portaudio");
@@ -38,46 +38,37 @@ foreach (var device in BufdioLib.OutputDevices)
 ```
 
 ## Playing Audio Files
-Bufdio provides high level interface for loading audio and control its playback state. The audio source can be loaded from local file, URL or .NET `System.IO.Stream`.
+Bufdio provides high level interface for loading audio and control its playback state.
 
 ```csharp
 using IAudioPlayer player = new AudioPlayer();
 
 // Methods
-player.Load("audio-url");
-player.Load(fileStream);
+player.LoadAsync("audio-url");
+player.LoadAsync(fileStream);
 player.Play();
 player.Pause();
 player.Stop();
-player.SetVolume(0.9f);
 player.Seek(TimeSpan.FromSeconds(2));
 
+// Properties
+player.Volume;
+player.CustomSampleProcessor;
+player.Logger;
+
 // Properties (read-only)
-var state = player.CurrentState; // (Playing, Buferring, Paused, Stopped)
-var loaded = player.IsAudioLoaded;
-var duration = player.TotalDuration;
-var position = player.CurrentPosition;
-var volume = player.CurrentVolume;
+player.State;
+player.IsLoaded;
+player.Duration;
+player.Position;
 
 // Events
-player.AudioLoaded += OnAudioLoaded;
 player.StateChanged += OnStateChanged;
 player.PositionChanged += OnPositionChanged;
-player.PlaybackCompleted += OnPlaybackCompleted;
-player.LogCreated += OnLogCreated;
-player.FrameDecoded += OnFrameDecoded;
-player.FramePresented += OnFramePresented;
-```
-
-The `AudioPlayer` constructor allows you to specify list of custom sample processors. `ISampleProcessor` interface is intended to modify audio sample that will be executed before writing audio frame to output device. The most simple processor is `VolumeProcessor` that simply multiply given sample by desired volume.
-
-```csharp
-var processors = new ISampleProcessor[] { new EchoProcessor(), new DistortionProcessor() };
-using IAudioPlayer player = new AudioPlayer(customProcessors: processors);
 ```
 
 ## Generate Sine Wave
-Bufdio also exposes low level `IAudioEngine` interface for sending or writing samples to native output device.
+Bufdio also exposes low level `IAudioEngine` interface for sending or writing samples to an output device.
 
 ```csharp
 const int SampleRate = 8000;
@@ -104,16 +95,15 @@ for (var i = 0; i < 10; i++)
 ```
 
 ## TODO
-- Currently only resampling to `Float32` format
 - Still need more unit tests
 
 ## Credits
 - [PortAudio](https://github.com/PortAudio/portaudio/)
 - [FFmpeg](https://www.ffmpeg.org/)
-- [FFmpeg.AutoGen](https://github.com/Ruslan-B/FFmpeg.AutoGen) (project dependency)
-- [Avalonia](https://github.com/AvaloniaUI/Avalonia) (used in sample project)
-- [NWaves](https://github.com/ar1st0crat/NWaves/) (used in sample project)
-- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) (used in sample project)
+- [FFmpeg.AutoGen](https://github.com/Ruslan-B/FFmpeg.AutoGen)
+- [Avalonia](https://github.com/AvaloniaUI/Avalonia)
+- [NWaves](https://github.com/ar1st0crat/NWaves/)
+- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode)
 
 ## Similar Projects
 - [SharpAudio](https://github.com/feliwir/SharpAudio)

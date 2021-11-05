@@ -16,8 +16,6 @@ namespace Bufdio
     {
         internal static class Constants
         {
-            // Currently, resampling and outputing audio buffers only works with Float32 format.
-            // Thats why these variables exists, we might need to add customizations in the future.
             public const AVSampleFormat FFmpegSampleFormat = AVSampleFormat.AV_SAMPLE_FMT_FLT;
             public const PaBinding.PaSampleFormat PaSampleFormat = PaBinding.PaSampleFormat.paFloat32;
         }

@@ -192,15 +192,18 @@ namespace Bufdio.Decoders.FFmpeg
         /// <inheritdoc />
         public bool TrySeek(TimeSpan position, out string error)
         {
-            var tb = _formatCtx->streams[_audioIndex]->time_base;
-            var pos = (long)(position.TotalSeconds * ffmpeg.AV_TIME_BASE);
-            var ts = ffmpeg.av_rescale_q(pos, ffmpeg.av_get_time_base_q(), tb);
+            lock (_syncLock)
+            {
+                var tb = _formatCtx->streams[_audioIndex]->time_base;
+                var pos = (long)(position.TotalSeconds * ffmpeg.AV_TIME_BASE);
+                var ts = ffmpeg.av_rescale_q(pos, ffmpeg.av_get_time_base_q(), tb);
 
-            var code = ffmpeg.avformat_seek_file(_formatCtx, _audioIndex, 0, ts, long.MaxValue, 0);
-            ffmpeg.avcodec_flush_buffers(_codecCtx);
+                var code = ffmpeg.avformat_seek_file(_formatCtx, _audioIndex, 0, ts, long.MaxValue, 0);
+                ffmpeg.avcodec_flush_buffers(_codecCtx);
 
-            error = code.FFIsError() ? code.FFErrorToText() : null;
-            return !code.FFIsError();
+                error = code.FFIsError() ? code.FFErrorToText() : null;
+                return !code.FFIsError();
+            }
         }
 
         private int ReadsImpl(void* opaque, byte* buf, int buf_size)
