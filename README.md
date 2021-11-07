@@ -1,16 +1,15 @@
 # Bufdio
 [![NuGet](https://img.shields.io/nuget/v/Bufdio)](https://www.nuget.org/packages/Bufdio/)
 
-A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio especially in a desktop environment.
+A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio file.
 
-This video demonstrate how to integrate Bufdio and [NWaves](https://github.com/ar1st0crat/NWaves/) to create realtime echo effect during playback (source code can be found at [examples directory](https://github.com/luthfiampas/Bufdio/tree/main/examples/BufdioAvalonia)).
+It uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play audio stream from a video file). And [PortAudio](https://github.com/PortAudio/portaudio) for writing audio stream to output device.
 
+## Example
 [![Bufdio Sample](https://i.ibb.co/ZmJMjJF/2021-11-02-02-46.png)](https://youtu.be/Bx22X20Tkj0)
 
-Behind the scene, it uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play video files by taking its audio stream only). And [PortAudio](https://github.com/PortAudio/portaudio) for sending buffer data to output device using blocking calls mechanism.
-
 ## Getting Started
-This repository include pre-compiled PortAudio binaries for Windows, Linux, macOS that can be found at the [libs directory](https://github.com/luthfiampas/Bufdio/tree/main/libs/PortAudio).
+This repository include pre-compiled PortAudio binaries for Windows, Linux, macOS that can be found at the [libs directory](https://github.com/luthfiampas/Bufdio/tree/main/libs/PortAudio). However, we can construct PortAudio and FFmpeg by using system-wide libraries.
 
 ```csharp
 BufdioLib.InitializePortAudio("path/to/portaudio");
@@ -58,6 +57,7 @@ player.Logger;
 
 // Properties (read-only)
 player.State;
+player.IsSeeking;
 player.IsLoaded;
 player.Duration;
 player.Position;
