@@ -96,7 +96,9 @@ namespace Bufdio
                 return;
             }
 
-            PaBinding.InitializeBindings(new LibraryLoader(portAudioPath ?? GetPortAudioLibName()));
+            portAudioPath = string.IsNullOrEmpty(portAudioPath) ? GetPortAudioLibName() : portAudioPath;
+
+            PaBinding.InitializeBindings(new LibraryLoader(portAudioPath));
             PaBinding.Pa_Initialize();
 
             var deviceCount = PaBinding.Pa_GetDeviceCount();
