@@ -6,9 +6,6 @@
 ## Rider
 .idea
 
-# Visual Studio Code
-.vscode
-
 # User-specific files
 *.rsuser
 *.suo
