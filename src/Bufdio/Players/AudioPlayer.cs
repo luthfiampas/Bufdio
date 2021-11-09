@@ -16,8 +16,7 @@ using Bufdio.Utilities.Extensions;
 namespace Bufdio.Players
 {
     /// <summary>
-    /// An implementation of <see cref="IAudioPlayer"/> interface that provides functionalities
-    /// for loading and controlling audio playback.
+    /// A class that provides functionalities for loading and controlling audio playback.
     /// <para>Implements: <see cref="IAudioPlayer"/></para>
     /// </summary>
     public class AudioPlayer : IAudioPlayer
@@ -474,16 +473,18 @@ namespace Bufdio.Players
 
                 SetAndRaiseStateChanged(PlaybackState.Playing);
                 Engine.Send(samples);
+
                 SetAndRaisePositionChanged(TimeSpan.FromMilliseconds(frame.PresentationTime));
             }
 
-            // Don't calls Seek(), the Play() method will do the job! The Seek() method will sets
-            // IsSeeking to true. This can be an endless cycle since the decoder thread will spins for
-            // engine thread to complete and break the spin when IsSeeking value is true.
+            // Don't calls Seek(), the Play() method will do the job! The Seek() method will sets IsSeeking to true.
+            // This can be an endless cycle since the decoder thread will spins and wait the engine thread
+            // to complete, and break the spin when IsSeeking value is true.
             SetAndRaisePositionChanged(TimeSpan.Zero);
 
             // Just fire and forget, and it should be non-blocking event.
             Task.Run(() => SetAndRaiseStateChanged(PlaybackState.Idle));
+
             Logger?.LogInfo("Engine thread is completed.");
         }
 
@@ -505,11 +506,12 @@ namespace Bufdio.Players
             }
 
             State = PlaybackState.Idle;
-
             EnsureThreadsDone();
+
             Engine.Dispose();
             CurrentDecoder?.Dispose();
             Queue.Clear();
+
             GC.SuppressFinalize(this);
 
             _disposed = true;

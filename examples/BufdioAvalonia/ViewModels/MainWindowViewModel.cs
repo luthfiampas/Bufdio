@@ -140,10 +140,7 @@ namespace BufdioAvalonia.ViewModels
 
         public void LogInfo(string message)
         {
-            if (!message.Contains("buffering"))
-            {
-                Dispatcher.UIThread.InvokeAsync(() => Logs.Add(new Log(message, Log.LogType.Info)));
-            }
+            Dispatcher.UIThread.InvokeAsync(() => Logs.Add(new Log(message, Log.LogType.Info)));
         }
 
         public void LogWarning(string message)

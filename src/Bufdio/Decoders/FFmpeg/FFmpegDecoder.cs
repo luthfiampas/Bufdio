@@ -9,7 +9,7 @@ using FFmpeg.AutoGen;
 namespace Bufdio.Decoders.FFmpeg
 {
     /// <summary>
-    /// A class that uses FFmpeg for decoding and resampling specified audio source.
+    /// A class that uses FFmpeg for decoding and demuxing specified audio source.
     /// It accept URL, local file and .NET Stream as its audio source. This class cannot be inherited.
     /// <para>Implements: <see cref="IAudioDecoder"/>.</para>
     /// </summary>
@@ -25,7 +25,7 @@ namespace Bufdio.Decoders.FFmpeg
         private readonly FFmpegResampler _resampler;
         private avio_alloc_context_read_packet _reads;
         private avio_alloc_context_seek _seeks;
-        private readonly int _audioIndex;
+        private readonly int _streamIndex;
         private readonly Stream _inputStream;
         private readonly byte[] _inputStreamBuffer;
         private bool _disposed;
@@ -63,23 +63,25 @@ namespace Bufdio.Decoders.FFmpeg
             ffmpeg.avformat_find_stream_info(_formatCtx, null).FFGuard();
 
             AVCodec* codec = null;
-            _audioIndex = ffmpeg.av_find_best_stream(_formatCtx, MediaType, -1, -1, &codec, 0).FFGuard();
+            _streamIndex = ffmpeg.av_find_best_stream(_formatCtx, MediaType, -1, -1, &codec, 0).FFGuard();
 
-            // The given source can be video or contains multiple streams.
-            // Since we only works with audio stream, so why not discard other streams?
+            // The given source can be a video or contains multiple streams.
+            // Since we will only work with audio stream, let's discard other streams.
             for (var i = 0; i < _formatCtx->nb_streams; i++)
             {
-                if (i != _audioIndex)
+                if (i != _streamIndex)
                 {
                     _formatCtx->streams[i]->discard = AVDiscard.AVDISCARD_ALL;
                 }
             }
 
             _codecCtx = ffmpeg.avcodec_alloc_context3(codec);
-            ffmpeg.avcodec_parameters_to_context(_codecCtx, _formatCtx->streams[_audioIndex]->codecpar).FFGuard();
+
+            ffmpeg.avcodec_parameters_to_context(_codecCtx, _formatCtx->streams[_streamIndex]->codecpar).FFGuard();
             ffmpeg.avcodec_open2(_codecCtx, codec, null).FFGuard();
 
-            var opts = options ?? new FFmpegDecoderOptions();
+            options ??= new FFmpegDecoderOptions();
+
             var channelLayout = _codecCtx->channel_layout <= 0
                 ? ffmpeg.av_get_default_channel_layout(_codecCtx->channels)
                 : (long)_codecCtx->channel_layout;
@@ -88,13 +90,14 @@ namespace Bufdio.Decoders.FFmpeg
                 channelLayout,
                 _codecCtx->sample_rate,
                 _codecCtx->sample_fmt,
-                opts.Channels,
-                opts.SampleRate
+                options.Channels,
+                options.SampleRate
             );
 
-            var rational = ffmpeg.av_q2d(_formatCtx->streams[_audioIndex]->time_base);
-            var duration = _formatCtx->streams[_audioIndex]->duration * rational * 1000.00;
+            var rational = ffmpeg.av_q2d(_formatCtx->streams[_streamIndex]->time_base);
+            var duration = _formatCtx->streams[_streamIndex]->duration * rational * 1000.00;
             duration = duration > 0 ? duration : _formatCtx->duration / 1000.00;
+
             StreamInfo = new AudioStreamInfo(_codecCtx->channels, _codecCtx->sample_rate, duration.Milliseconds());
 
             _currentPacket = ffmpeg.av_packet_alloc();
@@ -150,10 +153,11 @@ namespace Bufdio.Decoders.FFmpeg
                             return new AudioDecoderResult(null, false, code.FFIsEOF(), code.FFErrorToText());
                         }
 
-                    } while (_currentPacket->stream_index != _audioIndex);
+                    } while (_currentPacket->stream_index != _streamIndex);
 
                     ffmpeg.avcodec_send_packet(_codecCtx, _currentPacket);
                     ffmpeg.av_packet_unref(_currentPacket);
+
                     code = ffmpeg.avcodec_receive_frame(_codecCtx, _currentFrame);
 
                     // Break if all inputs was received
@@ -182,7 +186,7 @@ namespace Bufdio.Decoders.FFmpeg
                 pts = pts >= 0 ? pts : 0;
 
                 // Calculate FFmpeg's presentation timestamp in milliseconds value
-                var rational = ffmpeg.av_q2d(_formatCtx->streams[_audioIndex]->time_base);
+                var rational = ffmpeg.av_q2d(_formatCtx->streams[_streamIndex]->time_base);
                 var presentationTime = Math.Round(pts * rational * 1000.0, 2);
 
                 return new AudioDecoderResult(new AudioFrame(presentationTime, data), true, false);
@@ -194,11 +198,11 @@ namespace Bufdio.Decoders.FFmpeg
         {
             lock (_syncLock)
             {
-                var tb = _formatCtx->streams[_audioIndex]->time_base;
+                var tb = _formatCtx->streams[_streamIndex]->time_base;
                 var pos = (long)(position.TotalSeconds * ffmpeg.AV_TIME_BASE);
                 var ts = ffmpeg.av_rescale_q(pos, ffmpeg.av_get_time_base_q(), tb);
 
-                var code = ffmpeg.avformat_seek_file(_formatCtx, _audioIndex, 0, ts, long.MaxValue, 0);
+                var code = ffmpeg.avformat_seek_file(_formatCtx, _streamIndex, 0, ts, long.MaxValue, 0);
                 ffmpeg.avcodec_flush_buffers(_codecCtx);
 
                 error = code.FFIsError() ? code.FFErrorToText() : null;

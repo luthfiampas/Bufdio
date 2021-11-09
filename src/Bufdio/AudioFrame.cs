@@ -22,7 +22,7 @@
         /// Gets frame presentation time in milliseconds.
         /// </summary>
         public double PresentationTime { get; }
-        
+
         /// <summary>
         /// Gets audio samples in <c>Float32</c> format that can be written to output device.
         /// </summary>
