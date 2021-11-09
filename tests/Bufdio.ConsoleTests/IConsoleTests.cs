@@ -1,9 +1,8 @@
-﻿namespace Bufdio.ConsoleTests
+﻿namespace Bufdio.ConsoleTests;
+
+public interface IConsoleTests
 {
-    public interface IConsoleTests
-    {
-        string Name { get; }
-        
-        void Run();
-    }
+    string Name { get; }
+
+    void Run();
 }

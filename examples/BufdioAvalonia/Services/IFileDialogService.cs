@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace BufdioAvalonia.Services
+namespace BufdioAvalonia.Services;
+
+public interface IFileDialogService
 {
-    public interface IFileDialogService
-    {
-        Task<string> OpenAsync();
-    }
+    Task<string> OpenAsync();
 }

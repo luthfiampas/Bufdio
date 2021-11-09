@@ -1,28 +1,27 @@
-﻿namespace Bufdio.Players
+﻿namespace Bufdio.Players;
+
+/// <summary>
+/// Enumeration represents audio playback state.
+/// </summary>
+public enum PlaybackState
 {
     /// <summary>
-    /// Enumeration represents audio playback state.
+    /// Indicates that the playback state is currently idle.
     /// </summary>
-    public enum PlaybackState
-    {
-        /// <summary>
-        /// Indicates that the playback state is currently idle.
-        /// </summary>
-        Idle,
+    Idle,
 
-        /// <summary>
-        /// Indicates that the playback state is currently playing an audio.
-        /// </summary>
-        Playing,
-        
-        /// <summary>
-        /// Indicates that the playback is currently buferring.
-        /// </summary>
-        Buffering,
-        
-        /// <summary>
-        /// Indicates that the playback state is currently paused.
-        /// </summary>
-        Paused
-    }
+    /// <summary>
+    /// Indicates that the playback state is currently playing an audio.
+    /// </summary>
+    Playing,
+
+    /// <summary>
+    /// Indicates that the playback is currently buferring.
+    /// </summary>
+    Buffering,
+
+    /// <summary>
+    /// Indicates that the playback state is currently paused.
+    /// </summary>
+    Paused
 }

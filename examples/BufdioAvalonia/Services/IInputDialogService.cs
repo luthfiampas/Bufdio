@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace BufdioAvalonia.Services
+namespace BufdioAvalonia.Services;
+
+public interface IInputDialogService
 {
-    public interface IInputDialogService
-    {
-        Task<string> OpenAsync(string title = "", string description = "");
-    }
+    Task<string> OpenAsync(string title = "", string description = "");
 }

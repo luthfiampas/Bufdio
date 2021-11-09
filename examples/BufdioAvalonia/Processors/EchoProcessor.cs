@@ -1,15 +1,14 @@
 ﻿using Bufdio.Processors;
 using NWaves.Effects;
 
-namespace BufdioAvalonia.Processors
+namespace BufdioAvalonia.Processors;
+
+public class EchoProcessor : SampleProcessorBase
 {
-    public class EchoProcessor : SampleProcessorBase
+    private readonly EchoEffect _echo = new EchoEffect(44100, 0.2f, 0.6f) { Wet = 1f };
+
+    public override float Process(float sample)
     {
-        private readonly EchoEffect _echo = new EchoEffect(44100, 0.2f, 0.6f) { Wet = 1f };
-        
-        public override float Process(float sample)
-        {
-            return _echo.Process(sample);
-        }
+        return _echo.Process(sample);
     }
 }

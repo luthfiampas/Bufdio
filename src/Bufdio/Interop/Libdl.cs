@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Bufdio.Interop
+namespace Bufdio.Interop;
+
+internal static class Libdl
 {
-    internal static class Libdl
-    {
-        private const string LibraryName = "libdl";
-        
-        [DllImport(LibraryName)]
-        public static extern IntPtr dlopen(string fileName, int flags);
+    private const string LibraryName = "libdl";
 
-        [DllImport(LibraryName)]
-        public static extern IntPtr dlsym(IntPtr handle, string symbol);
+    [DllImport(LibraryName)]
+    public static extern IntPtr dlopen(string fileName, int flags);
 
-        [DllImport(LibraryName)]
-        public static extern int dlclose(IntPtr handle);
-    }
+    [DllImport(LibraryName)]
+    public static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+    [DllImport(LibraryName)]
+    public static extern int dlclose(IntPtr handle);
 }

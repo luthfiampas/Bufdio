@@ -4,93 +4,91 @@ using Bufdio.Bindings.PortAudio;
 using Bufdio.Exceptions;
 using Bufdio.Utilities.Extensions;
 
-namespace Bufdio.Engines
+namespace Bufdio.Engines;
+
+/// <summary>
+/// Interact with output audio device by using PortAudio library.
+/// This class cannot be inherited.
+/// <para>Implements: <see cref="IAudioEngine"/>.</para>
+/// </summary>
+public sealed class PortAudioEngine : IAudioEngine
 {
+    private const int FramesPerBuffer = 0; // paFramesPerBufferUnspecified
+    private const PaBinding.PaStreamFlags StreamFlags = PaBinding.PaStreamFlags.paNoFlag;
+    private readonly AudioEngineOptions _options;
+    private readonly IntPtr _stream;
+    private bool _disposed;
+
     /// <summary>
-    /// Provide interaction with output audio device for sending audio samples in <c>Float32</c> format
-    /// by utilizing PortAudio library. This class cannot be inherited.
-    /// <para>Implements: <see cref="IAudioEngine"/>.</para>
+    /// Initializes <see cref="PortAudioEngine"/> object.
     /// </summary>
-    public sealed class PortAudioEngine : IAudioEngine
+    /// <param name="options">Optional audio engine options.</param>
+    /// <exception cref="PortAudioException">
+    /// Might be thrown when errors occured during PortAudio stream initialization.
+    /// </exception>
+    public PortAudioEngine(AudioEngineOptions options = default)
     {
-        private const int FramesPerBuffer = 0; // paFramesPerBufferUnspecified
-        private const PaBinding.PaStreamFlags StreamFlags = PaBinding.PaStreamFlags.paNoFlag;
-        private readonly AudioEngineOptions _options;
-        private readonly IntPtr _stream;
-        private bool _disposed;
+        _options = options ?? new AudioEngineOptions();
 
-        /// <summary>
-        /// Instantiate a new <see cref="PortAudioEngine"/>.
-        /// </summary>
-        /// <param name="options">Optional audio engine options.</param>
-        /// <exception cref="PortAudioException">
-        /// Might be thrown when errors occured during PortAudio stream initialization.
-        /// </exception>
-        public PortAudioEngine(AudioEngineOptions options = default)
+        var parameters = new PaBinding.PaStreamParameters
         {
-            _options = options ?? new AudioEngineOptions();
+            channelCount = _options.Channels,
+            device = _options.Device.DeviceIndex,
+            hostApiSpecificStreamInfo = IntPtr.Zero,
+            sampleFormat = BufdioLib.Constants.PaSampleFormat,
+            suggestedLatency = _options.Latency
+        };
 
-            var parameters = new PaBinding.PaStreamParameters
-            {
-                channelCount = _options.Channels,
-                device = _options.Device.DeviceIndex,
-                hostApiSpecificStreamInfo = IntPtr.Zero,
-                sampleFormat = BufdioLib.Constants.PaSampleFormat,
-                suggestedLatency = _options.Latency
-            };
+        IntPtr stream;
 
-            IntPtr stream;
-            
-            unsafe
-            {
-                PaBinding.PaStreamParameters tempParameters;
-                var parametersPtr = new IntPtr(&tempParameters);
-                Marshal.StructureToPtr(parameters, parametersPtr, false);
+        unsafe
+        {
+            PaBinding.PaStreamParameters tempParameters;
+            var parametersPtr = new IntPtr(&tempParameters);
+            Marshal.StructureToPtr(parameters, parametersPtr, false);
 
-                var code = PaBinding.Pa_OpenStream(
-                    new IntPtr(&stream),
-                    IntPtr.Zero,
-                    parametersPtr,
-                    _options.SampleRate,
-                    FramesPerBuffer,
-                    StreamFlags,
-                    null,
-                    IntPtr.Zero
-                );
+            var code = PaBinding.Pa_OpenStream(
+                new IntPtr(&stream),
+                IntPtr.Zero,
+                parametersPtr,
+                _options.SampleRate,
+                FramesPerBuffer,
+                StreamFlags,
+                null,
+                IntPtr.Zero);
 
-                code.PaGuard();
-            }
-
-            _stream = stream;
-            
-            PaBinding.Pa_StartStream(_stream).PaGuard();
+            code.PaGuard();
         }
 
-        /// <inheritdoc />
-        public void Send(Span<float> samples)
-        {
-            unsafe
-            {
-                fixed (float* buffer = samples)
-                {
-                    var frames = samples.Length / _options.Channels;
-                    PaBinding.Pa_WriteStream(_stream, (IntPtr)buffer, frames);
-                }
-            }
-        }
-        
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if (_disposed || _stream == IntPtr.Zero)
-            {
-                return;
-            }
+        _stream = stream;
 
-            PaBinding.Pa_AbortStream(_stream);
-            PaBinding.Pa_CloseStream(_stream);
-            
-            _disposed = true;
+        PaBinding.Pa_StartStream(_stream).PaGuard();
+    }
+
+    /// <inheritdoc />
+    public void Send(Span<float> samples)
+    {
+        unsafe
+        {
+            fixed (float* buffer = samples)
+            {
+                var frames = samples.Length / _options.Channels;
+                PaBinding.Pa_WriteStream(_stream, (IntPtr)buffer, frames);
+            }
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_disposed || _stream == IntPtr.Zero)
+        {
+            return;
+        }
+
+        PaBinding.Pa_AbortStream(_stream);
+        PaBinding.Pa_CloseStream(_stream);
+
+        _disposed = true;
     }
 }

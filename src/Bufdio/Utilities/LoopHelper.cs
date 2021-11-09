@@ -1,23 +1,22 @@
 using System;
 
-namespace Bufdio.Utilities
+namespace Bufdio.Utilities;
+
+internal static class LoopHelper
 {
-    internal static class LoopHelper
+    public static void While(Func<bool> condition, Func<bool> breaker, Action action = default)
     {
-        public static void While(Func<bool> condition, Func<bool> breaker, Action action = default)
+        Ensure.NotNull(condition, nameof(condition));
+        Ensure.NotNull(breaker, nameof(breaker));
+
+        while (condition())
         {
-            Ensure.NotNull(condition, nameof(condition));
-            Ensure.NotNull(breaker, nameof(breaker));
-
-            while (condition())
+            if (breaker())
             {
-                if (breaker())
-                {
-                    break;
-                }
-
-                action?.Invoke();
+                break;
             }
+
+            action?.Invoke();
         }
     }
 }

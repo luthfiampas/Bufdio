@@ -1,32 +1,31 @@
 using System;
 
-namespace BufdioAvalonia.Common
+namespace BufdioAvalonia.Common;
+
+public readonly struct Log
 {
-    public readonly struct Log
+    public Log(string message, LogType type)
     {
-        public Log(string message, LogType type)
-        {
-            Date = DateTime.Now;
-            Message = message;
-            Type = type;
-        }
+        Date = DateTime.Now;
+        Message = message;
+        Type = type;
+    }
 
-        public string Message { get; }
+    public string Message { get; }
 
-        public DateTime Date { get; }
+    public DateTime Date { get; }
 
-        public LogType Type { get; }
+    public LogType Type { get; }
 
-        public override string ToString()
-        {
-            return $"[{Type}] [{Date:MM/dd/yyyy HH:mm:ss}] - {Message}";
-        }
+    public override string ToString()
+    {
+        return $"[{Type}] [{Date:MM/dd/yyyy HH:mm:ss}] - {Message}";
+    }
 
-        public enum LogType
-        {
-            Info,
-            Warning,
-            Error
-        }
+    public enum LogType
+    {
+        Info,
+        Warning,
+        Error
     }
 }

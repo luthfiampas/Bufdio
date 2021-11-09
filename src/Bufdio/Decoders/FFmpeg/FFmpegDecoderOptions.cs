@@ -1,30 +1,29 @@
-﻿namespace Bufdio.Decoders.FFmpeg
+﻿namespace Bufdio.Decoders.FFmpeg;
+
+/// <summary>
+/// Options for decoding (and, or) resampling specified audio source that can be passed
+/// through <see cref="FFmpegDecoder"/> class. This class cannot be inherited.
+/// </summary>
+public sealed class FFmpegDecoderOptions
 {
     /// <summary>
-    /// Options for decoding (and, or) resampling specified audio source that can be passed
-    /// through <see cref="FFmpegDecoder"/> class. This class cannot be inherited.
+    /// Initializes <see cref="FFmpegDecoderOptions"/> object.
     /// </summary>
-    public sealed class FFmpegDecoderOptions
+    /// <param name="channels">Desired audio channel count.</param>
+    /// <param name="sampleRate">Desired audio sample rate.</param>
+    public FFmpegDecoderOptions(int channels = 2, int sampleRate = 44100)
     {
-        /// <summary>
-        /// Instantiate a new <see cref="FFmpegDecoderOptions"/>.
-        /// </summary>
-        /// <param name="channels">Desired audio channel count.</param>
-        /// <param name="sampleRate">Desired audio sample rate.</param>
-        public FFmpegDecoderOptions(int channels = 2, int sampleRate = 44100)
-        {
-            Channels = channels;
-            SampleRate = sampleRate;
-        }
-
-        /// <summary>
-        /// Gets destination audio channel count.
-        /// </summary>
-        public int Channels { get; }
-        
-        /// <summary>
-        /// Gets destination audio sample rate.
-        /// </summary>
-        public int SampleRate { get; }
+        Channels = channels;
+        SampleRate = sampleRate;
     }
+
+    /// <summary>
+    /// Gets destination audio channel count.
+    /// </summary>
+    public int Channels { get; }
+
+    /// <summary>
+    /// Gets destination audio sample rate.
+    /// </summary>
+    public int SampleRate { get; }
 }

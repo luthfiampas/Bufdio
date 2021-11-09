@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/tests/Bufdio.ConsoleTests/bin/Debug/net5.0/Bufdio.ConsoleTests.dll",
+            "program": "${workspaceFolder}/tests/Bufdio.ConsoleTests/bin/Debug/net6.0/Bufdio.ConsoleTests.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/tests/Bufdio.ConsoleTests/bin/Debug/net5.0",
+            "cwd": "${workspaceFolder}/tests/Bufdio.ConsoleTests/bin/Debug/net6.0",
             "console": "externalTerminal",
             "stopAtEntry": false
         },
@@ -17,9 +17,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/examples/BufdioAvalonia/bin/Debug/net5.0/BufdioAvalonia.dll",
+            "program": "${workspaceFolder}/examples/BufdioAvalonia/bin/Debug/net6.0/BufdioAvalonia.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/examples/BufdioAvalonia/bin/Debug/net5.0",
+            "cwd": "${workspaceFolder}/examples/BufdioAvalonia/bin/Debug/net6.0",
             "console": "internalConsole",
             "stopAtEntry": false
         },
