@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyVersion>0.0</AssemblyVersion>
+    <AssemblyVersion>0.1</AssemblyVersion>
     <Authors>Luthfi Tri Atmaja</Authors>
     <Copyright>Copyright 2021 Luthfi Tri Atmaja</Copyright>
     <Description>A cross platform audio playback library for .NET with PortAudio and FFmpeg.</Description>
-    <FileVersion>0.0.1</FileVersion>
+    <FileVersion>0.1.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <LangVersion>latest</LangVersion>
@@ -17,7 +17,7 @@
     <Product>Bufdio</Product>
     <RepositoryUrl>https://github.com/luthfiampas/Bufdio</RepositoryUrl>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
