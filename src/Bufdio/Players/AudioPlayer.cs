@@ -392,11 +392,16 @@ public class AudioPlayer : IAudioPlayer
 
         while (State != PlaybackState.Idle)
         {
-            LoopHelper.While(() => IsSeeking, () => State == PlaybackState.Idle, () =>
+            while (IsSeeking)
             {
+                if (State == PlaybackState.Idle)
+                {
+                    break;
+                }
+
                 Queue.Clear();
                 Thread.Sleep(10);
-            });
+            }
 
             var result = CurrentDecoder.DecodeNextFrame();
 
@@ -427,10 +432,15 @@ public class AudioPlayer : IAudioPlayer
                 break;
             }
 
-            LoopHelper.While(
-                () => Queue.Count >= MaxQueueSize,
-                () => State == PlaybackState.Idle,
-                () => Thread.Sleep(100));
+            while (Queue.Count >= MaxQueueSize)
+            {
+                if (State == PlaybackState.Idle)
+                {
+                    break;
+                }
+
+                Thread.Sleep(100);
+            }
 
             Queue.Enqueue(result.Frame);
         }
