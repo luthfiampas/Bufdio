@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <NoWarn>IDE0090</NoWarn>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 

@@ -13,7 +13,7 @@ public static class Program
         { 4, new PortAudioEngineTests() }
     };
 
-    public static void Main(string[] args)
+    public static void Main()
     {
         while (true)
         {

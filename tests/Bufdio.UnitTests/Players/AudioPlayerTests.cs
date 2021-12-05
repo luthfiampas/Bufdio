@@ -152,7 +152,7 @@ public class AudioPlayerTests
         // 100 audio frames
         for (var i = 0; i < 100; i++)
         {
-            var frame = new AudioFrame((i + 1) * 1000, new byte[0]);
+            var frame = new AudioFrame((i + 1) * 1000, Array.Empty<byte>());
             results.Add(new AudioDecoderResult(frame, true, false));
         }
 
@@ -179,7 +179,7 @@ public class AudioPlayerTests
 
         Mock.Get(decoder).Verify(d => d.DecodeNextFrame(), Times.Exactly(101));
         Assert.Equal(100, engine.GetSendCalledCount());
-        Assert.Equal(TimeSpan.FromMilliseconds(100 * 1000), positions[positions.Count - 2]);
+        Assert.Equal(TimeSpan.FromMilliseconds(100 * 1000), positions[^2]);
         Assert.Equal(PlaybackState.Idle, player.State);
     }
 
