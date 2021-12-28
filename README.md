@@ -1,7 +1,7 @@
 # Bufdio
 [![NuGet](https://img.shields.io/nuget/v/Bufdio)](https://www.nuget.org/packages/Bufdio/)
 
-A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provide easy to use API for playing and streaming audio file.
+A cross-platform audio playback library that targets .NET Standard 2.1. The main purpose of this project is to provides an easy to use API for playing and streaming audio file.
 
 It uses [FFmpeg](https://www.ffmpeg.org/) to decode audio frames (so, it is possible to play audio stream from a video file). And [PortAudio](https://github.com/PortAudio/portaudio) for writing audio stream to output device.
 
@@ -43,8 +43,8 @@ Bufdio provides high level interface for loading audio and control its playback 
 using IAudioPlayer player = new AudioPlayer();
 
 // Methods
-player.LoadAsync("audio-url");
-player.LoadAsync(fileStream);
+player.LoadAsync("audio-url-or-path");
+player.LoadAsync(stream);
 player.Play();
 player.Pause();
 player.Stop();
