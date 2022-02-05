@@ -14,14 +14,13 @@ namespace Bufdio.UnitTests.Players;
 public class AudioPlayerTests
 {
     [Fact]
-    public void Construct_Throws_ArgumentNullException()
+    public void Construct_Null_Engine_Should_Throws_ArgumentNullException()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() => new AudioPlayer(null));
-        Assert.Equal("engine", ex.ParamName);
+        Assert.Throws<ArgumentNullException>("engine", () => new AudioPlayer(null));
     }
 
     [Fact]
-    public void Construct_Properties_Default_Value()
+    public void Construct_Properties_Should_Have_Expected_Values()
     {
         var player = new AudioPlayer(Mock.Of<IAudioEngine>());
         Assert.Equal(1.0f, player.Volume);
@@ -32,21 +31,23 @@ public class AudioPlayerTests
     }
 
     [Fact]
-    public async Task LoadAsync_Throws_ArgumentNullException()
+    public async Task LoadAsync_Null_Url_Should_Throws_ArgumentNullException()
     {
         var player = new AudioPlayer(Mock.Of<IAudioEngine>());
+        await Assert.ThrowsAsync<ArgumentNullException>("url", async () => await player.LoadAsync((string)null));
+    }
 
-        var ex1 = await Assert.ThrowsAsync<ArgumentNullException>(async () => await player.LoadAsync((string)null));
-        var ex2 = await Assert.ThrowsAsync<ArgumentNullException>(async () => await player.LoadAsync((Stream)null));
-
-        Assert.Equal("url", ex1.ParamName);
-        Assert.Equal("stream", ex2.ParamName);
+    [Fact]
+    public async Task LoadAsync_Null_Stream_Should_Throws_ArgumentNullException()
+    {
+        var player = new AudioPlayer(Mock.Of<IAudioEngine>());
+        await Assert.ThrowsAsync<ArgumentNullException>("stream", async () => await player.LoadAsync((Stream)null));
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task LoadAsync_Dispose_Decoder_First(bool useUrl)
+    public async Task LoadAsync_Should_Dispose_Decoder_First(bool useUrl)
     {
         var player = new AudioPlayerStub(Mock.Of<IAudioEngine>());
         var decoder1 = Mock.Of<IAudioDecoder>();
@@ -70,7 +71,7 @@ public class AudioPlayerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task LoadAsync_Decoder_Created(bool useUrl)
+    public async Task LoadAsync_Should_Create_Decoder(bool useUrl)
     {
         var decoder = Mock.Of<IAudioDecoder>();
         Mock.Get(decoder).SetupGet(d => d.StreamInfo).Returns(new AudioStreamInfo(2, 44100, TimeSpan.FromSeconds(2)));
@@ -96,7 +97,7 @@ public class AudioPlayerTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task LoadAsync_Handle_Decoder_Creation_Error(bool useUrl)
+    public async Task LoadAsync_Should_Handle_Decoder_Creation_Error(bool useUrl)
     {
         var decoder = Mock.Of<IAudioDecoder>();
         Mock.Get(decoder).SetupGet(x => x.StreamInfo).Throws<Exception>();
@@ -120,14 +121,14 @@ public class AudioPlayerTests
     }
 
     [Fact]
-    public void Play_Audio_Not_Loaded_Throws_BufdioException()
+    public void Play_Audio_Not_Loaded_Should_Throws_BufdioException()
     {
         var player = new AudioPlayerStub(Mock.Of<IAudioEngine>());
         Assert.Throws<BufdioException>(() => player.Play());
     }
 
     [Fact]
-    public async Task Play_Resume_When_Paused()
+    public async Task Play_Should_Resume_If_Paused()
     {
         var player = new AudioPlayerStub(Mock.Of<IAudioEngine>());
         player.SetCreateDecoderMock(Mock.Of<IAudioDecoder>());
@@ -141,7 +142,7 @@ public class AudioPlayerTests
     }
 
     [Fact]
-    public async Task Play_Play_All_Frames_And_Raise_Correct_Position()
+    public async Task Play_Should_Play_All_Frames_And_Raise_Correct_Position()
     {
         var engine = new AudioEngineStub();
         var decoder = Mock.Of<IAudioDecoder>();
@@ -185,7 +186,7 @@ public class AudioPlayerTests
 
     private class AudioPlayerStub : AudioPlayer
     {
-        private IAudioDecoder _createDecoderMock;
+        private IAudioDecoder _decoder;
 
         public AudioPlayerStub(IAudioEngine engine) : base(engine)
         {
@@ -198,7 +199,7 @@ public class AudioPlayerTests
 
         public void SetCreateDecoderMock(IAudioDecoder decoder)
         {
-            _createDecoderMock = decoder;
+            _decoder = decoder;
         }
 
         public IAudioDecoder GetCurrentDecoder()
@@ -213,12 +214,12 @@ public class AudioPlayerTests
 
         protected override IAudioDecoder CreateDecoder(string url)
         {
-            return _createDecoderMock;
+            return _decoder;
         }
 
         protected override IAudioDecoder CreateDecoder(Stream stream)
         {
-            return _createDecoderMock;
+            return _decoder;
         }
     }
 

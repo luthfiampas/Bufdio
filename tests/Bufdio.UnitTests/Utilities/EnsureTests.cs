@@ -7,7 +7,7 @@ namespace Bufdio.UnitTests.Utilities;
 public class EnsureTests
 {
     [Fact]
-    public void That_Throws_Correct_Exception_Type_With_Correct_Exception_Message()
+    public void That_False_Should_Throws_Correct_Exception_Type_And_Correct_Exception_Message()
     {
         var ex1 = Assert.Throws<InvalidCastException>(() => Ensure.That<InvalidCastException>(false, "invalid"));
         var ex2 = Assert.Throws<OverflowException>(() => Ensure.That<OverflowException>(false));
@@ -17,7 +17,7 @@ public class EnsureTests
     }
 
     [Fact]
-    public void NotNull_Works_Properly()
+    public void NotNull_Should_Works_Properly()
     {
         // Should not throws
         Ensure.NotNull("abc", "param");
@@ -31,7 +31,7 @@ public class EnsureTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void NotNull_Use_Default_ParamName(string paramName)
+    public void NotNull_Should_Use_Default_ParamName(string paramName)
     {
         var ex = Assert.Throws<ArgumentNullException>(() => Ensure.NotNull(null, paramName));
         Assert.Equal("argument", ex.ParamName);

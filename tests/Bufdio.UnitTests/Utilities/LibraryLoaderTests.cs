@@ -7,9 +7,8 @@ namespace Bufdio.UnitTests.Utilities;
 public class LibraryLoaderTests
 {
     [Fact]
-    public void Construct_Throws_ArgumentNullException()
+    public void Construct_Null_LibraryName_Throws_ArgumentNullException()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() => new LibraryLoader(null));
-        Assert.Equal("libraryName", ex.ParamName);
+        Assert.Throws<ArgumentNullException>("libraryName", () => new LibraryLoader(null));
     }
 }

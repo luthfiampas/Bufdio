@@ -6,7 +6,7 @@ namespace Bufdio.UnitTests.Processors;
 public class VolumeProcessorTests
 {
     [Fact]
-    public void Process_Returns_Correct_Sample()
+    public void Process_Should_Returns_Correct_Sample()
     {
         const float volume = 0.08f;
 
