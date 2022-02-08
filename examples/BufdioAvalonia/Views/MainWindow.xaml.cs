@@ -15,7 +15,7 @@ public class MainWindow : Window
         AvaloniaXamlLoader.Load(this);
 
         _bar = this.Find<ProgressBar>("ProgressBar");
-        _bar.PointerReleased += OnProgressBarReleased; ;
+        _bar.PointerReleased += OnProgressBarReleased;
     }
 
     private void OnProgressBarReleased(object sender, PointerReleasedEventArgs e)
