@@ -7,33 +7,37 @@ namespace Bufdio.UnitTests.Utilities;
 public class EnsureTests
 {
     [Fact]
-    public void That_False_Should_Throws_Correct_Exception_Type_And_Correct_Exception_Message()
+    public void That_Condition_Is_True_Should_Not_Throws()
     {
-        var ex1 = Assert.Throws<InvalidCastException>(() => Ensure.That<InvalidCastException>(false, "invalid"));
-        var ex2 = Assert.Throws<OverflowException>(() => Ensure.That<OverflowException>(false));
-
-        Assert.Equal("invalid", ex1.Message);
-        Assert.Equal("", ex2.Message);
+        Ensure.That<ArgumentException>(true);
     }
 
     [Fact]
-    public void NotNull_Should_Works_Properly()
+    public void That_Condition_Is_False_Should_Throws_Correct_Exception_Type_With_Default_Exception_Message()
     {
-        // Should not throws
-        Ensure.NotNull("abc", "param");
-
-        // Should throws
-        var ex = Assert.Throws<ArgumentNullException>(() => Ensure.NotNull(null, "param"));
-        Assert.Equal("param", ex.ParamName);
+        var ex = Assert.Throws<InvalidCastException>(() => Ensure.That<InvalidCastException>(false));
+        Assert.Equal(new InvalidCastException().Message, ex.Message);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void NotNull_Should_Use_Default_ParamName(string paramName)
+    [Fact]
+    public void That_Condition_Is_False_Should_Throws_Correct_Exception_Type_With_Specified_Exception_Message()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() => Ensure.NotNull(null, paramName));
-        Assert.Equal("argument", ex.ParamName);
+        const string message = "message";
+
+        var ex = Assert.Throws<InvalidCastException>(() => Ensure.That<InvalidCastException>(false, message));
+        Assert.Equal(message, ex.Message);
+    }
+
+    [Fact]
+    public void NotNull_Argument_Not_Null_Should_Not_Throws()
+    {
+        Ensure.NotNull("abc", "param");
+    }
+
+    [Fact]
+    public void NotNull_Null_Argument_Should_Throws_ArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => Ensure.NotNull((string)null, "param"));
+        Assert.Equal("param", ex.ParamName);
     }
 }

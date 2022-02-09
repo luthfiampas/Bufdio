@@ -32,7 +32,14 @@ public sealed unsafe class FFmpegDecoder : IAudioDecoder
 
     private FFmpegDecoder(string url, Stream stream, FFmpegDecoderOptions options, bool useUrl = false)
     {
-        Ensure.NotNull(useUrl ? url : stream, useUrl ? nameof(url) : nameof(stream));
+        if (useUrl)
+        {
+            Ensure.NotNull(url, nameof(url));
+        }
+        else
+        {
+            Ensure.NotNull(stream, nameof(stream));
+        }
 
         _formatCtx = ffmpeg.avformat_alloc_context();
 
