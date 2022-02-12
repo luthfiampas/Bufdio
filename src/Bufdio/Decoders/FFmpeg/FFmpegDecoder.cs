@@ -67,6 +67,8 @@ public sealed unsafe class FFmpegDecoder : IAudioDecoder
 
         var formatCtx = _formatCtx;
         ffmpeg.avformat_open_input(&formatCtx, useUrl ? url : null, null, &dict).FFGuard();
+        ffmpeg.av_dict_free(&dict);
+
         ffmpeg.avformat_find_stream_info(_formatCtx, null).FFGuard();
 
         AVCodec* codec = null;
