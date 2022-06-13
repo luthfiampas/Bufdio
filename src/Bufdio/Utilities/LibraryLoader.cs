@@ -18,7 +18,11 @@ internal sealed class LibraryLoader : IDisposable
         {
             _handle = Kernel32.LoadLibrary(libraryName);
         }
-        else if (PlatformInfo.IsLinux || PlatformInfo.IsOSX)
+        else if (PlatformInfo.IsLinux)
+        {
+            _handle = Libdl2.dlopen(libraryName, RTLD_NOW);
+        }
+        else if (PlatformInfo.IsOSX)
         {
             _handle = Libdl.dlopen(libraryName, RTLD_NOW);
         }
@@ -32,7 +36,25 @@ internal sealed class LibraryLoader : IDisposable
 
     public TDelegate LoadFunc<TDelegate>(string name)
     {
-        var ptr = PlatformInfo.IsWindows ? Kernel32.GetProcAddress(_handle, name) : Libdl.dlsym(_handle, name);
+        IntPtr ptr;
+
+        if (PlatformInfo.IsWindows)
+        {
+            ptr = Kernel32.GetProcAddress(_handle, name);
+        }
+        else if (PlatformInfo.IsLinux)
+        {
+            ptr = Libdl2.dlsym(_handle, name);
+        }
+        else if (PlatformInfo.IsOSX)
+        {
+            ptr = Libdl.dlsym(_handle, name);
+        }
+        else
+        {
+            throw new NotSupportedException("Platform is not supported.");
+        }
+
         Ensure.That<Exception>(ptr != IntPtr.Zero, $"Could not load function name: {name}.");
 
         return Marshal.GetDelegateForFunctionPointer<TDelegate>(ptr);
@@ -49,9 +71,17 @@ internal sealed class LibraryLoader : IDisposable
         {
             Kernel32.FreeLibrary(_handle);
         }
-        else
+        else if (PlatformInfo.IsLinux)
+        {
+            Libdl2.dlclose(_handle);
+        }
+        else if (PlatformInfo.IsOSX)
         {
             Libdl.dlclose(_handle);
+        }
+        else
+        {
+            throw new NotSupportedException("Platform is not supported.");
         }
 
         _disposed = true;
